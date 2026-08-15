@@ -8,6 +8,7 @@
       <div class="comment-body">
         <div class="comment-head">
           <span class="comment-nickname">{{ c.nickname }}</span>
+          <span v-if="isAuthor(c)" class="up-badge">UP</span>
           <a v-if="c.website" class="comment-site" @click="openSite(c.website)">🔗 网站</a>
           <span class="comment-time">{{ formatDate(c.createdAt) }}</span>
         </div>
@@ -22,6 +23,7 @@
             <div class="comment-body">
               <div class="comment-head">
                 <span class="comment-nickname">{{ child.nickname }}</span>
+                <span v-if="isAuthor(child)" class="up-badge">UP</span>
                 <span class="comment-time">{{ formatDate(child.createdAt) }}</span>
               </div>
               <div class="comment-content">{{ child.content }}</div>
@@ -81,7 +83,8 @@ import { getPostComments, submitComment, getSite } from '../../api'
 import { useUserStore } from '../../store/user'
 
 const props = defineProps({
-  postId: { type: [String, Number], required: true }
+  postId: { type: [String, Number], required: true },
+  authorId: { type: [String, Number], default: null }
 })
 
 const route = useRoute()
@@ -96,6 +99,12 @@ const form = ref({ content: '' })
 const textareaRef = ref(null)
 
 const isLoggedIn = computed(() => !!userStore.token)
+
+/** 判断评论是否由文章作者发布 */
+const isAuthor = (comment) => {
+  return props.authorId != null && comment.userId != null &&
+    String(comment.userId) === String(props.authorId)
+}
 
 /** 未登录点击 → 跳转登录页，登录后返回当前文章 */
 const goLogin = () => {

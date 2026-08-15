@@ -21,6 +21,9 @@ public class CommentVO {
 
     private String website;
 
+    /** 评论者用户 ID（用于识别文章作者） */
+    private Long userId;
+
     private String content;
 
     /** 0 待审核 1 已通过 2 垃圾 */

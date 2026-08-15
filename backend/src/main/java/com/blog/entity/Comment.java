@@ -26,6 +26,9 @@ public class Comment {
 
     private String email;
 
+    /** 评论者用户 ID（登录用户评论时记录） */
+    private Long userId;
+
     private String website;
 
     private String content;

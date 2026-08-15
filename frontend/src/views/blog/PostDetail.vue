@@ -25,7 +25,7 @@
         <span v-else></span>
         <router-link v-if="post.next" :to="`/post/${post.next.id}`">{{ post.next.title }} →</router-link>
       </div>
-      <CommentSection v-if="post" :post-id="post.id" />
+      <CommentSection v-if="post" :post-id="post.id" :author-id="post.userId" />
     </main>
     <main class="empty" v-else-if="notFound">文章不存在或已删除</main>
   </BlogShell>

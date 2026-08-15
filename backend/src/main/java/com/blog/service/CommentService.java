@@ -109,6 +109,7 @@ public class CommentService {
         comment.setContent(request.getContent().trim());
         comment.setNickname(user.getNickname());
         comment.setEmail("");
+        comment.setUserId(userId);
         comment.setWebsite(null);
         // 默认直接通过
         comment.setStatus(1);
@@ -199,6 +200,7 @@ public class CommentService {
         vo.setParentId(c.getParentId());
         vo.setNickname(c.getNickname());
         vo.setWebsite(c.getWebsite());
+        vo.setUserId(c.getUserId());
         vo.setContent(c.getContent());
         vo.setStatus(c.getStatus());
         vo.setCreatedAt(c.getCreatedAt());
