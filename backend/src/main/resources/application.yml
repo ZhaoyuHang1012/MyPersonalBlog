@@ -1,0 +1,42 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: blog-backend
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/blog?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: blog
+    password: blog123456
+  jackson:
+    time-zone: GMT+8
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    banner: false
+    db-config:
+      id-type: auto
+
+blog:
+  jwt:
+    # 生产环境请务必更换此密钥
+    secret: blog-jwt-secret-key-2024-please-change-in-production-9f3a
+    expire-hours: 72
+  site:
+    title: 我的博客
+    subtitle: 记录技术与生活
+    author: 博主
+  upload:
+    # 上传文件存储目录（相对后端运行目录，即项目根 uploads）
+    dir: ../uploads
+    # 单个文件最大 10MB
+    max-size: 10485760
+  # RSS 中的站点地址（部署到服务器后请改为实际域名）
+  site-url: http://localhost:8080
+
+logging:
+  level:
+    com.blog: info

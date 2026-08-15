@@ -1,0 +1,14 @@
+# 统一换行符：文本文件入库时转为 LF，检出时按平台
+* text=auto
+
+# Windows 批处理必须保留 CRLF
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+# 二进制文件不转换
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.webp binary
+*.jar binary
