@@ -1,4 +1,4 @@
-import { defineStore } from 'pinia'
+import { defineStore, acceptHMRUpdate } from 'pinia'
 import { login as loginApi, register as registerApi, getMe } from '../api'
 
 export const useUserStore = defineStore('user', {
@@ -36,3 +36,8 @@ export const useUserStore = defineStore('user', {
     }
   }
 })
+
+// 热更新时保持 store 状态一致（避免新旧模块混杂导致的登录跳转失效）
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useUserStore, import.meta.hot))
+}
