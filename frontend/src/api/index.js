@@ -27,11 +27,8 @@ export const adminListMurmurs = () => http.get('/admin/murmurs')
 export const adminCreateMurmur = (data) => http.post('/admin/murmurs', data)
 export const adminDeleteMurmur = (id) => http.delete(`/admin/murmurs/${id}`)
 
-// ---- 相册 ----
+// ---- 相册（直接展示媒体库图片） ----
 export const getAlbums = () => http.get('/albums')
-export const adminListAlbums = () => http.get('/admin/albums')
-export const adminCreateAlbum = (data) => http.post('/admin/albums', data)
-export const adminDeleteAlbum = (id) => http.delete(`/admin/albums/${id}`)
 
 // ---- 统计 / 日志 ----
 export const getStats = () => http.get('/admin/stats')

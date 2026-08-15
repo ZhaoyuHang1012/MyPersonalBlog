@@ -12,8 +12,16 @@
       </div>
 
       <div v-loading="loading" class="media-grid">
-        <div v-for="f in files" :key="f.name" class="media-item">
-          <img :src="f.url" :alt="f.name" loading="lazy" @click="preview(f)" />
+        <div v-for="(f, idx) in files" :key="f.name" class="media-item">
+          <el-image
+            class="media-thumb"
+            :src="f.url"
+            :preview-src-list="previewList"
+            :initial-index="idx"
+            fit="cover"
+            preview-teleported
+            lazy
+          />
           <div class="media-info">
             <span class="media-size">{{ formatSize(f.size) }}</span>
             <div class="media-actions">
@@ -44,7 +52,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { adminListFiles, adminDeleteFile, uploadFile } from '../../api'
 
@@ -53,6 +61,8 @@ const total = ref(0)
 const page = ref(1)
 const size = ref(12)
 const loading = ref(false)
+
+const previewList = computed(() => files.value.map((f) => f.url))
 
 const load = async () => {
   loading.value = true
@@ -97,10 +107,6 @@ const copyUrl = async (f) => {
   ElMessage.success('链接已复制：' + url)
 }
 
-const preview = (f) => {
-  window.open(f.url, '_blank')
-}
-
 const remove = async (f) => {
   try {
     await ElMessageBox.confirm('确定删除该图片吗？已引用它的文章图片将失效。', '删除确认', {
@@ -139,10 +145,9 @@ onMounted(load)
   background: #fff;
 }
 
-.media-item img {
+.media-thumb {
   width: 100%;
   height: 130px;
-  object-fit: cover;
   display: block;
   cursor: zoom-in;
   background: #f3f4f6;

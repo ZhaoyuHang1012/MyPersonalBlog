@@ -26,7 +26,6 @@ const routes = [
       { path: 'media', component: () => import('../views/admin/MediaLibrary.vue') },
       { path: 'links', component: () => import('../views/admin/LinkManage.vue') },
       { path: 'murmurs', component: () => import('../views/admin/MurmurManage.vue') },
-      { path: 'albums', component: () => import('../views/admin/AlbumManage.vue') },
       { path: 'logs', component: () => import('../views/admin/OperationLogs.vue') },
       { path: 'profile', component: () => import('../views/admin/Profile.vue') }
     ]

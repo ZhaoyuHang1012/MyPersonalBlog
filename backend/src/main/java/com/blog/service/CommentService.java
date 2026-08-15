@@ -196,6 +196,7 @@ public class CommentService {
         vo.setNickname(c.getNickname());
         vo.setWebsite(c.getWebsite());
         vo.setContent(c.getContent());
+        vo.setStatus(c.getStatus());
         vo.setCreatedAt(c.getCreatedAt());
         return vo;
     }

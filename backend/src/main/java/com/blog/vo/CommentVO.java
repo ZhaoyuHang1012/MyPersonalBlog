@@ -23,6 +23,9 @@ public class CommentVO {
 
     private String content;
 
+    /** 0 待审核 1 已通过 2 垃圾 */
+    private Integer status;
+
     private LocalDateTime createdAt;
 
     /** 后台列表用：所属文章标题 */

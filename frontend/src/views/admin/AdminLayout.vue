@@ -33,9 +33,6 @@
         <el-menu-item index="/admin/murmurs">
           <el-icon><ChatLineSquare /></el-icon><span>说说管理</span>
         </el-menu-item>
-        <el-menu-item index="/admin/albums">
-          <el-icon><Camera /></el-icon><span>相册管理</span>
-        </el-menu-item>
         <el-menu-item index="/admin/logs">
           <el-icon><List /></el-icon><span>操作日志</span>
         </el-menu-item>
@@ -49,7 +46,7 @@
         <div class="header-title">个人博客管理后台</div>
         <el-dropdown @command="onCommand">
           <span class="user-info">
-            <el-avatar :size="30" style="background: #3a7afe">
+            <el-avatar :size="30" :src="userStore.user?.avatar || undefined" style="background: #3a7afe">
               {{ (userStore.user?.nickname || 'A')[0] }}
             </el-avatar>
             <span>{{ userStore.user?.nickname || '管理员' }}</span>
