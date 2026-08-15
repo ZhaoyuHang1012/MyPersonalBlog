@@ -98,7 +98,7 @@ onMounted(() => {
 const onCommand = (cmd) => {
   if (cmd === 'logout') {
     userStore.logout()
-    router.push('/admin/login')
+    router.push('/')
   } else if (cmd === 'home') {
     window.open('/', '_blank')
   } else if (cmd === 'profile') {

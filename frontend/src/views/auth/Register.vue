@@ -84,7 +84,7 @@ const onSubmit = async () => {
       inviteCode: form.inviteCode.trim()
     })
     ElMessage.success('注册成功，欢迎加入！')
-    router.push('/admin/posts')
+    router.push('/')
   } catch (e) {
     /* 拦截器已提示 */
   } finally {

@@ -124,7 +124,7 @@ const changePassword = async () => {
     })
     ElMessage.success('密码修改成功，请使用新密码重新登录')
     userStore.logout()
-    router.push('/admin/login')
+    router.push('/')
   } catch (e) {
     /* 拦截器已提示 */
   } finally {

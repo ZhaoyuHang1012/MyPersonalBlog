@@ -13,8 +13,30 @@
           <router-link to="/murmur">说说</router-link>
           <router-link to="/album">相册</router-link>
           <router-link to="/about">关于</router-link>
-          <router-link v-if="isLoggedIn" to="/admin">我的主页</router-link>
-          <router-link v-else to="/register">注册</router-link>
+          <template v-if="isLoggedIn">
+            <el-dropdown class="user-menu" trigger="click" @command="onUserCommand">
+              <span class="user-menu-trigger">
+                <el-avatar :size="26" :src="userStore.user?.avatar || undefined" style="background: rgba(255,255,255,0.25)">
+                  {{ (userStore.user?.nickname || 'U')[0] }}
+                </el-avatar>
+                <span class="user-menu-name">{{ userStore.user?.nickname || '用户' }}</span>
+              </span>
+              <template #dropdown>
+                <el-dropdown-menu>
+                  <el-dropdown-item command="write">✍️ 写文章</el-dropdown-item>
+                  <el-dropdown-item command="posts">📄 我的文章</el-dropdown-item>
+                  <el-dropdown-item command="media">🖼 我的媒体</el-dropdown-item>
+                  <el-dropdown-item command="settings">⚙️ 个人设置</el-dropdown-item>
+                  <el-dropdown-item v-if="userStore.isAdmin" command="admin" divided>🛠 管理后台</el-dropdown-item>
+                  <el-dropdown-item command="logout" divided>退出登录</el-dropdown-item>
+                </el-dropdown-menu>
+              </template>
+            </el-dropdown>
+          </template>
+          <template v-else>
+            <router-link to="/admin/login">登录</router-link>
+            <router-link to="/register">注册</router-link>
+          </template>
           <a class="theme-toggle" :title="isDark ? '切换到白天模式' : '切换到黑夜模式'" @click="toggleTheme">
             {{ isDark ? '☀️' : '🌙' }}
           </a>
@@ -38,9 +60,11 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { getSite } from '../../api'
 import { useUserStore } from '../../store/user'
 
+const router = useRouter()
 const userStore = useUserStore()
 const site = ref({ title: '我的博客', subtitle: '', author: '', announcement: '', footer: '', icp: '' })
 const isLoggedIn = computed(() => !!userStore.token)
@@ -51,6 +75,18 @@ const toggleTheme = () => {
   isDark.value = !isDark.value
   document.documentElement.setAttribute('data-theme', isDark.value ? 'dark' : '')
   localStorage.setItem('blog_theme', isDark.value ? 'dark' : 'light')
+}
+
+const onUserCommand = (cmd) => {
+  if (cmd === 'logout') {
+    userStore.logout()
+    router.push('/')
+  } else if (cmd === 'admin') {
+    router.push('/admin')
+  } else {
+    const map = { write: '/me/posts/new', posts: '/me/posts', media: '/me/media', settings: '/me/settings' }
+    router.push(map[cmd] || '/me/posts')
+  }
 }
 
 onMounted(async () => {

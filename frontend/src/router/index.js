@@ -10,11 +10,25 @@ const routes = [
   { path: '/album', component: () => import('../views/blog/Album.vue') },
   { path: '/u/:username', component: () => import('../views/blog/UserBlog.vue') },
   { path: '/register', component: () => import('../views/auth/Register.vue') },
+  // 个人中心（前台风格，登录用户管理自己的博客）
+  {
+    path: '/me',
+    component: () => import('../components/blog/MeShell.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      { path: '', redirect: '/me/posts' },
+      { path: 'posts', component: () => import('../views/admin/PostList.vue') },
+      { path: 'posts/new', component: () => import('../views/admin/PostEdit.vue') },
+      { path: 'posts/:id/edit', component: () => import('../views/admin/PostEdit.vue') },
+      { path: 'media', component: () => import('../views/admin/MediaLibrary.vue') },
+      { path: 'settings', component: () => import('../views/admin/Profile.vue') }
+    ]
+  },
   { path: '/admin/login', component: () => import('../views/admin/Login.vue') },
   {
     path: '/admin',
     component: () => import('../views/admin/AdminLayout.vue'),
-    meta: { requiresAuth: true },
+    meta: { requiresAuth: true, requiresAdmin: true },
     children: [
       { path: '', redirect: '/admin/dashboard' },
       { path: 'dashboard', component: () => import('../views/admin/Dashboard.vue') },
@@ -46,6 +60,13 @@ router.beforeEach((to) => {
     const token = localStorage.getItem('blog_token')
     if (!token) {
       return { path: '/admin/login', query: { redirect: to.fullPath } }
+    }
+  }
+  // 管理后台仅管理员可进，普通用户引导到个人中心
+  if (to.matched.some((r) => r.meta.requiresAdmin)) {
+    const user = JSON.parse(localStorage.getItem('blog_user') || 'null')
+    if (user?.role !== 'ADMIN') {
+      return '/me/posts'
     }
   }
 })

@@ -958,6 +958,69 @@ html[data-theme='dark'] .markdown-body blockquote {
   user-select: none;
 }
 
+/* 导航用户菜单 */
+.user-menu {
+  margin-left: 18px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.user-menu-trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  color: #fff;
+  outline: none;
+}
+
+.user-menu-name {
+  max-width: 90px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 14px;
+}
+
+/* 前台个人中心 */
+.me-page {
+  max-width: 1000px;
+  width: 100%;
+  margin: 24px auto;
+  padding: 0 20px;
+  min-height: 60vh;
+}
+
+.me-title {
+  font-size: 26px;
+  margin-bottom: 16px;
+}
+
+.me-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 10px;
+}
+
+.me-tabs a {
+  padding: 8px 18px;
+  border-radius: 8px 8px 0 0;
+  color: var(--text-secondary);
+  font-size: 15px;
+}
+
+.me-tabs a:hover {
+  color: var(--accent);
+}
+
+.me-tabs a.active {
+  color: var(--accent);
+  font-weight: 600;
+  border-bottom: 2px solid var(--accent);
+}
+
 /* ============ 评论区 ============ */
 .comment-section {
   margin-top: 40px;

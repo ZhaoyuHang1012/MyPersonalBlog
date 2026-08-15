@@ -50,8 +50,8 @@ const onSubmit = async () => {
   try {
     await userStore.login(form.username, form.password)
     ElMessage.success('登录成功')
-    // 管理员进管理后台，普通用户进个人中心；有回跳地址则优先回跳
-    router.push(route.query.redirect || (userStore.isAdmin ? '/admin' : '/admin/posts'))
+    // 管理员进管理后台，普通用户留在大厅；有回跳地址则优先回跳
+    router.push(route.query.redirect || (userStore.isAdmin ? '/admin' : '/'))
   } catch (e) {
     /* 错误已由拦截器提示 */
   } finally {

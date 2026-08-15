@@ -91,6 +91,8 @@ import {
 const route = useRoute()
 const router = useRouter()
 const isEdit = computed(() => !!route.params.id)
+// 兼容前台个人中心（/me）与管理后台（/admin）两种场景
+const listPath = computed(() => (route.path.startsWith('/me') ? '/me/posts' : '/admin/posts'))
 
 const form = ref({
   title: '',
@@ -197,7 +199,7 @@ const save = async () => {
       await adminCreatePost(payload)
     }
     ElMessage.success('保存成功')
-    router.push('/admin/posts')
+    router.push(listPath.value)
   } catch (e) {
     /* 错误已由拦截器提示 */
   } finally {

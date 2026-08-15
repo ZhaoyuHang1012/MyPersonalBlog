@@ -16,14 +16,14 @@
       </el-select>
       <el-button @click="reload">查询</el-button>
       <div class="spacer"></div>
-      <el-button type="primary" @click="$router.push('/admin/posts/new')">新建文章</el-button>
+      <el-button type="primary" @click="$router.push(newPath)">新建文章</el-button>
     </div>
 
     <el-table :data="posts" v-loading="loading" stripe>
       <el-table-column prop="id" label="ID" width="70" />
       <el-table-column label="标题" min-width="260">
         <template #default="{ row }">
-          <span class="post-title-link" @click="$router.push(`/admin/posts/${row.id}/edit`)">
+          <span class="post-title-link" @click="$router.push(editPath(row.id))">
             {{ row.title }}
           </span>
           <el-tag v-if="row.isTop === 1" size="small" type="warning" class="mr4">置顶</el-tag>
@@ -52,7 +52,7 @@
       </el-table-column>
       <el-table-column label="操作" width="140" fixed="right">
         <template #default="{ row }">
-          <el-button link type="primary" @click="$router.push(`/admin/posts/${row.id}/edit`)">
+          <el-button link type="primary" @click="$router.push(editPath(row.id))">
             编辑
           </el-button>
           <el-button link type="danger" @click="remove(row)">删除</el-button>
@@ -74,10 +74,18 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import dayjs from 'dayjs'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { adminListPosts, adminDeletePost } from '../../api'
+
+const route = useRoute()
+// 兼容前台个人中心（/me）与管理后台（/admin）两种场景
+const isMe = computed(() => route.path.startsWith('/me'))
+const listBase = computed(() => (isMe.value ? '/me/posts' : '/admin/posts'))
+const newPath = computed(() => `${listBase.value}/new`)
+const editPath = (id) => `${listBase.value}/${id}/edit`
 
 const posts = ref([])
 const total = ref(0)
