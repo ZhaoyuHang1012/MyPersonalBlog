@@ -522,6 +522,12 @@ a {
   z-index: 5;
 }
 
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
 .header-title {
   font-size: 16px;
   font-weight: 600;

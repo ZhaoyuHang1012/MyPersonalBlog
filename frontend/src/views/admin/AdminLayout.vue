@@ -56,8 +56,11 @@
     </el-aside>
     <el-container>
       <el-header class="admin-header">
-        <div class="header-title">
-          {{ userStore.isAdmin ? '博客管理后台' : '我的博客主页' }}
+        <div class="header-left">
+          <div class="header-title">{{ userStore.isAdmin ? '博客管理后台' : '我的博客主页' }}</div>
+          <el-button size="small" text bg @click="router.push('/')">
+            🏠 博客前台
+          </el-button>
         </div>
         <el-dropdown @command="onCommand">
           <span class="user-info">
@@ -100,7 +103,7 @@ const onCommand = (cmd) => {
     userStore.logout()
     router.push('/')
   } else if (cmd === 'home') {
-    window.open('/', '_blank')
+    router.push('/')
   } else if (cmd === 'profile') {
     router.push('/admin/profile')
   }
