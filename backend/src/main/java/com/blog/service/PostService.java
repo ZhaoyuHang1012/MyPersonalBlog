@@ -15,7 +15,6 @@ import com.blog.mapper.PostMapper;
 import com.blog.mapper.PostTagMapper;
 import com.blog.mapper.TagMapper;
 import com.blog.mapper.UserMapper;
-import com.blog.vo.ArchiveGroupVO;
 import com.blog.vo.PostVO;
 import com.blog.vo.TagVO;
 import lombok.RequiredArgsConstructor;
@@ -132,32 +131,6 @@ public class PostService {
             vo.setNext(new PostVO.LinkVO(next.getId(), next.getTitle()));
         }
         return vo;
-    }
-
-    /**
-     * 文章归档（仅开放文章）
-     */
-    public List<ArchiveGroupVO> listArchive() {
-        List<Post> posts = postMapper.selectList(new QueryWrapper<Post>()
-                .select("id", "title", "published_at")
-                .eq("status", 1).eq("visibility", 1)
-                .orderByDesc("published_at"));
-        Map<String, ArchiveGroupVO> groups = new LinkedHashMap<>();
-        for (Post p : posts) {
-            if (p.getPublishedAt() == null) {
-                continue;
-            }
-            String key = p.getPublishedAt().getYear() + "-" + p.getPublishedAt().getMonthValue();
-            ArchiveGroupVO group = groups.computeIfAbsent(key, k -> {
-                ArchiveGroupVO g = new ArchiveGroupVO();
-                g.setYear(p.getPublishedAt().getYear());
-                g.setMonth(p.getPublishedAt().getMonthValue());
-                g.setPosts(new ArrayList<>());
-                return g;
-            });
-            group.getPosts().add(new ArchiveGroupVO.ArchiveItemVO(p.getId(), p.getTitle(), p.getPublishedAt()));
-        }
-        return new ArrayList<>(groups.values());
     }
 
     // ==================== 后台 ====================

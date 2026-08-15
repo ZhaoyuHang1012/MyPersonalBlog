@@ -1,19 +1,19 @@
 <template>
   <button
     v-if="loggedIn"
-    class="archive-btn"
-    :class="{ archived: archived }"
-    :title="archived ? '取消归档' : '归档收藏'"
+    class="favorite-btn"
+    :class="{ favorited: favorited }"
+    :title="favorited ? '取消收藏' : '收藏'"
     @click.stop="toggle"
   >
-    {{ archived ? '⭐ 已归档' : '☆ 归档' }}
+    {{ favorited ? '⭐ 已收藏' : '☆ 收藏' }}
   </button>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { getArchiveStatus, addArchive, removeArchive } from '../../api'
+import { getFavoriteStatus, addFavorite, removeFavorite } from '../../api'
 import { useUserStore } from '../../store/user'
 
 const props = defineProps({
@@ -23,18 +23,18 @@ const props = defineProps({
 
 const userStore = useUserStore()
 const loggedIn = computed(() => !!userStore.token)
-const archived = ref(false)
+const favorited = ref(false)
 
 const toggle = async () => {
   try {
-    if (archived.value) {
-      await removeArchive(props.targetType, props.targetId)
-      ElMessage.success('已取消归档')
+    if (favorited.value) {
+      await removeFavorite(props.targetType, props.targetId)
+      ElMessage.success('已取消收藏')
     } else {
-      await addArchive({ targetType: props.targetType, targetId: props.targetId })
-      ElMessage.success('已归档')
+      await addFavorite({ targetType: props.targetType, targetId: props.targetId })
+      ElMessage.success('已收藏')
     }
-    archived.value = !archived.value
+    favorited.value = !favorited.value
   } catch (e) {
     /* 拦截器已提示 */
   }
@@ -43,8 +43,8 @@ const toggle = async () => {
 onMounted(async () => {
   if (!loggedIn.value) return
   try {
-    const data = await getArchiveStatus(props.targetType, props.targetId)
-    archived.value = data.archived
+    const data = await getFavoriteStatus(props.targetType, props.targetId)
+    favorited.value = data.archived
   } catch (e) {
     /* ignore */
   }
@@ -52,7 +52,7 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.archive-btn {
+.favorite-btn {
   border: 1px solid var(--border);
   background: transparent;
   color: var(--text-secondary);
@@ -63,12 +63,12 @@ onMounted(async () => {
   transition: all 0.2s;
 }
 
-.archive-btn:hover {
+.favorite-btn:hover {
   border-color: #f5a623;
   color: #f5a623;
 }
 
-.archive-btn.archived {
+.favorite-btn.favorited {
   background: #fff7e6;
   border-color: #f5a623;
   color: #f5a623;

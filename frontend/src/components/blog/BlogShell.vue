@@ -9,6 +9,7 @@
         <nav class="site-nav">
           <router-link to="/">大厅</router-link>
           <router-link to="/archive">归档</router-link>
+          <router-link to="/favorites">收藏</router-link>
           <router-link to="/links">友链</router-link>
           <router-link to="/murmur">说说</router-link>
           <router-link to="/album">相册</router-link>

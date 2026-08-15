@@ -7,7 +7,7 @@
         <div class="album-group-info">
           <div class="album-group-name">{{ g.name }}</div>
           <div class="album-group-meta">{{ g.author?.nickname }} · {{ g.photoCount }} 个内容</div>
-          <ArchiveButton :target-type="'album'" :target-id="g.id" />
+          <FavoriteButton :target-type="'album'" :target-id="g.id" />
         </div>
       </router-link>
     </div>
@@ -17,7 +17,7 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import ArchiveButton from '../common/ArchiveButton.vue'
+import FavoriteButton from '../common/FavoriteButton.vue'
 import { getAlbums } from '../../api'
 
 const groups = ref([])

@@ -41,7 +41,7 @@
               <span v-for="t in p.tags" :key="t.id" class="tag" @click="toggleTag(t.id)">
                 # {{ t.name }}
               </span>
-              <ArchiveButton :target-type="'post'" :target-id="p.id" />
+              <FavoriteButton :target-type="'post'" :target-id="p.id" />
               <span class="views">👁 {{ p.viewCount }} 阅读</span>
               <span class="views">💬 {{ p.commentCount }} 评论</span>
             </div>
@@ -107,7 +107,7 @@ import dayjs from 'dayjs'
 import BlogShell from '../../components/blog/BlogShell.vue'
 import MurmurStream from '../../components/blog/MurmurStream.vue'
 import AlbumGrid from '../../components/blog/AlbumGrid.vue'
-import ArchiveButton from '../../components/common/ArchiveButton.vue'
+import FavoriteButton from '../../components/common/FavoriteButton.vue'
 import { getPosts, getCategories, getTags, getSite } from '../../api'
 
 const site = ref({ title: '我的博客', author: '博主' })

@@ -700,6 +700,16 @@ a {
   border-radius: 8px;
 }
 
+.timeline-icon {
+  flex-shrink: 0;
+  font-size: 16px;
+}
+
+.archive-link.muted {
+  color: var(--text-secondary);
+  cursor: default;
+}
+
 .archive-item:hover {
   background: #f6f8fa;
 }

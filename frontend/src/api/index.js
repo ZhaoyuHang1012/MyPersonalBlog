@@ -37,13 +37,16 @@ export const rejectFriendRequest = (id) => http.put(`/friends/requests/${id}/rej
 export const removeFriend = (friendId) => http.delete(`/friends/${friendId}`)
 export const getFriendRelation = (targetUserId) => http.get(`/friends/relation/${targetUserId}`)
 
-// ---- 归档收藏 ----
-export const getArchives = (type) => http.get('/archives', { params: { type } })
-export const getArchiveStatus = (targetType, targetId) =>
+// ---- 收藏 ----
+export const getFavorites = (type) => http.get('/archives', { params: { type } })
+export const getFavoriteStatus = (targetType, targetId) =>
   http.get('/archives/status', { params: { targetType, targetId } })
-export const addArchive = (data) => http.post('/archives', data)
-export const removeArchive = (targetType, targetId) =>
+export const addFavorite = (data) => http.post('/archives', data)
+export const removeFavorite = (targetType, targetId) =>
   http.delete('/archives', { params: { targetType, targetId } })
+
+// ---- 时间线归档（按月份） ----
+export const getTimeline = () => http.get('/archive')
 
 // ---- 说说 ----
 export const getMurmurs = (params) => http.get('/murmurs', { params })

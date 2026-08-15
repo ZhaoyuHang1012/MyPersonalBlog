@@ -6,9 +6,9 @@
       <el-tab-pane label="📷 相册" name="album" />
     </el-tabs>
 
-    <!-- 归档文章 -->
+    <!-- 收藏文章 -->
     <template v-if="activeType === 'post'">
-      <article v-for="p in data.posts" :key="p.id" class="post-card archive-row">
+      <article v-for="p in data.posts" :key="p.id" class="post-card favorite-row">
         <h2>
           <router-link :to="`/post/${p.id}`">{{ p.title }}</router-link>
         </h2>
@@ -18,15 +18,15 @@
             ✍️ {{ p.author.nickname }}
           </span>
           <span>{{ formatDate(p.publishedAt) }}</span>
-          <ArchiveButton :target-type="'post'" :target-id="p.id" />
+          <FavoriteButton :target-type="'post'" :target-id="p.id" />
         </div>
       </article>
-      <el-empty v-if="!data.posts.length" description="还没有归档文章" />
+      <el-empty v-if="!data.posts.length" description="还没有收藏的文章" />
     </template>
 
-    <!-- 归档说说 -->
+    <!-- 收藏说说 -->
     <template v-else-if="activeType === 'murmur'">
-      <div v-for="m in data.murmurs" :key="m.id" class="murmur-card archive-row">
+      <div v-for="m in data.murmurs" :key="m.id" class="murmur-card favorite-row">
         <div class="murmur-head">
           <el-avatar :size="36" :src="m.author?.avatar || undefined" style="background: #3a7afe">
             {{ (m.author?.nickname || 'U')[0] }}
@@ -35,14 +35,14 @@
             <span class="murmur-author">{{ m.author?.nickname }}</span>
             <div class="murmur-time">{{ formatDate(m.createdAt) }}</div>
           </div>
-          <ArchiveButton :target-type="'murmur'" :target-id="m.id" style="margin-left: auto" />
+          <FavoriteButton :target-type="'murmur'" :target-id="m.id" style="margin-left: auto" />
         </div>
         <div class="murmur-content-text">{{ m.content }}</div>
       </div>
-      <el-empty v-if="!data.murmurs.length" description="还没有归档说说" />
+      <el-empty v-if="!data.murmurs.length" description="还没有收藏的说说" />
     </template>
 
-    <!-- 归档相册 -->
+    <!-- 收藏相册 -->
     <template v-else>
       <div v-if="data.albums.length" class="album-group-grid">
         <div v-for="g in data.albums" :key="g.id" class="album-group-card-wrap">
@@ -54,12 +54,12 @@
               <div class="album-group-meta">{{ g.author?.nickname }} · {{ g.photoCount }} 个内容</div>
             </div>
           </router-link>
-          <div class="archive-btn-row">
-            <ArchiveButton :target-type="'album'" :target-id="g.id" />
+          <div class="favorite-btn-row">
+            <FavoriteButton :target-type="'album'" :target-id="g.id" />
           </div>
         </div>
       </div>
-      <el-empty v-else description="还没有归档相册" />
+      <el-empty v-else description="还没有收藏的相册" />
     </template>
   </div>
 </template>
@@ -68,8 +68,8 @@
 import { ref, reactive, onMounted } from 'vue'
 import dayjs from 'dayjs'
 import { ElMessage } from 'element-plus'
-import ArchiveButton from '../../components/common/ArchiveButton.vue'
-import { getArchives } from '../../api'
+import FavoriteButton from '../../components/common/FavoriteButton.vue'
+import { getFavorites } from '../../api'
 
 const activeType = ref('post')
 const data = reactive({ posts: [], murmurs: [], albums: [] })
@@ -80,12 +80,12 @@ const formatDate = (d) => (d ? dayjs(d).format('YYYY-MM-DD HH:mm') : '')
 const load = async () => {
   loading.value = true
   try {
-    const result = await getArchives(activeType.value)
+    const result = await getFavorites(activeType.value)
     data.posts = result.posts || []
     data.murmurs = result.murmurs || []
     data.albums = result.albums || []
   } catch (e) {
-    ElMessage.error('归档列表加载失败，请刷新重试')
+    ElMessage.error('收藏列表加载失败，请刷新重试')
   } finally {
     loading.value = false
   }
@@ -95,11 +95,11 @@ onMounted(load)
 </script>
 
 <style scoped>
-.archive-row {
+.favorite-row {
   position: relative;
 }
 
-.archive-btn-row {
+.favorite-btn-row {
   padding: 8px 12px 12px;
 }
 </style>
