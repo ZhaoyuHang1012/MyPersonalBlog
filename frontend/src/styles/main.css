@@ -364,24 +364,6 @@ a {
   line-height: 1.35;
 }
 
-/* 文章作者行（标题上方头像+昵称） */
-.post-author-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
-}
-
-.post-author-name {
-  font-size: 15px;
-  font-weight: 600;
-  color: var(--text);
-}
-
-.post-author-name:hover {
-  color: var(--accent);
-}
-
 .post-meta {
   display: flex;
   flex-wrap: wrap;
