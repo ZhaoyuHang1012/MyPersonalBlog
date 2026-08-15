@@ -5,8 +5,9 @@ import com.blog.dto.CommentRequest;
 import com.blog.service.CommentService;
 import com.blog.vo.CommentVO;
 import jakarta.servlet.http.HttpServletRequest;
-import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -33,10 +34,19 @@ public class CommentController {
 
     @PostMapping("/{postId}/comments")
     public Result<Void> submit(@PathVariable Long postId,
-                               @Valid @RequestBody CommentRequest request,
+                               @RequestBody CommentRequest request,
                                HttpServletRequest http) {
-        commentService.submit(postId, request, clientIp(http));
+        commentService.submit(postId, request, clientIp(http), currentUserId());
         return Result.ok();
+    }
+
+    /** 从 SecurityContext 获取当前登录用户 ID，未登录返回 null */
+    private Long currentUserId() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof Long uid) {
+            return uid;
+        }
+        return null;
     }
 
     private String clientIp(HttpServletRequest request) {

@@ -8,8 +8,10 @@ import com.blog.common.PageResult;
 import com.blog.dto.CommentRequest;
 import com.blog.entity.Comment;
 import com.blog.entity.Post;
+import com.blog.entity.User;
 import com.blog.mapper.CommentMapper;
 import com.blog.mapper.PostMapper;
+import com.blog.mapper.UserMapper;
 import com.blog.util.IpRateLimiter;
 import com.blog.vo.CommentVO;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +26,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
- * 评论服务：前台浏览/提交，后台审核管理
+ * 评论服务：前台浏览/提交（默认直接通过），后台审核管理
  */
 @Service
 @RequiredArgsConstructor
@@ -32,6 +34,7 @@ public class CommentService {
 
     private final CommentMapper commentMapper;
     private final PostMapper postMapper;
+    private final UserMapper userMapper;
     private final SiteService siteService;
     private final IpRateLimiter rateLimiter;
 
@@ -68,9 +71,10 @@ public class CommentService {
     }
 
     /**
-     * 提交评论（待审核）
+     * 提交评论（默认直接通过）
+     * @param userId 登录用户 ID，null 表示访客
      */
-    public void submit(Long postId, CommentRequest request, String ip) {
+    public void submit(Long postId, CommentRequest request, String ip, Long userId) {
         Post post = postMapper.selectById(postId);
         if (post == null || post.getStatus() != 1) {
             throw new BizException(404, "文章不存在");
@@ -78,8 +82,11 @@ public class CommentService {
         if (siteService.info().getAllowComments() != 1) {
             throw new BizException("评论功能已关闭");
         }
-        if (!rateLimiter.tryAcquire(ip)) {
-            throw new BizException("操作太频繁，请稍后再试");
+        if (request.getContent() == null || request.getContent().isBlank()) {
+            throw new BizException("评论内容不能为空");
+        }
+        if (request.getContent().trim().length() > 1000) {
+            throw new BizException("评论内容不能超过 1000 个字符");
         }
         if (request.getParentId() != null) {
             Comment parent = commentMapper.selectById(request.getParentId());
@@ -87,16 +94,45 @@ public class CommentService {
                 throw new BizException("回复的评论不存在");
             }
         }
+
         Comment comment = new Comment();
         comment.setPostId(postId);
         comment.setParentId(request.getParentId());
-        comment.setNickname(request.getNickname().trim());
-        comment.setEmail(request.getEmail().trim());
-        comment.setWebsite(request.getWebsite() == null ? null : request.getWebsite().trim());
         comment.setContent(request.getContent().trim());
-        comment.setStatus(0);
+
+        if (userId != null) {
+            // 已登录：自动使用账号昵称
+            User user = userMapper.selectById(userId);
+            if (user == null) {
+                throw new BizException(401, "登录状态已失效");
+            }
+            comment.setNickname(user.getNickname());
+            comment.setEmail("");
+            comment.setWebsite(null);
+        } else {
+            // 访客：限流 + 手动填写身份
+            if (!rateLimiter.tryAcquire(ip)) {
+                throw new BizException("操作太频繁，请稍后再试");
+            }
+            if (request.getNickname() == null || request.getNickname().isBlank()) {
+                throw new BizException("昵称不能为空");
+            }
+            if (request.getEmail() == null || request.getEmail().isBlank()) {
+                throw new BizException("邮箱不能为空");
+            }
+            if (!request.getEmail().matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
+                throw new BizException("邮箱格式不正确");
+            }
+            comment.setNickname(request.getNickname().trim());
+            comment.setEmail(request.getEmail().trim());
+            comment.setWebsite(request.getWebsite() == null ? null : request.getWebsite().trim());
+        }
+
+        // 默认直接通过
+        comment.setStatus(1);
         comment.setCreatedAt(LocalDateTime.now());
         commentMapper.insert(comment);
+        postMapper.incrCommentCount(postId);
     }
 
     // ==================== 后台 ====================
@@ -129,6 +165,18 @@ public class CommentService {
         comment.setStatus(1);
         commentMapper.updateById(comment);
         postMapper.incrCommentCount(comment.getPostId());
+    }
+
+    /** 退回：已通过 -> 待审核（前台隐藏） */
+    @Transactional
+    public void unapprove(Long id) {
+        Comment comment = requireComment(id);
+        if (comment.getStatus() != 1) {
+            throw new BizException("仅已通过的评论可以退回");
+        }
+        comment.setStatus(0);
+        commentMapper.updateById(comment);
+        postMapper.decrCommentCount(comment.getPostId());
     }
 
     @Transactional

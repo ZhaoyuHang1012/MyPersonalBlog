@@ -39,9 +39,10 @@
           <el-tag :type="statusTagType(row.status)">{{ statusText(row.status) }}</el-tag>
         </template>
       </el-table-column>
-      <el-table-column label="操作" width="190" fixed="right">
+      <el-table-column label="操作" width="220" fixed="right">
         <template #default="{ row }">
           <el-button v-if="row.status !== 1" link type="success" @click="approve(row)">通过</el-button>
+          <el-button v-if="row.status === 1" link type="warning" @click="unapprove(row)">退回</el-button>
           <el-button v-if="row.status !== 2" link type="warning" @click="reject(row)">垃圾</el-button>
           <el-button link type="danger" @click="remove(row)">删除</el-button>
         </template>
@@ -68,6 +69,7 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import {
   adminListComments,
   adminApproveComment,
+  adminUnapproveComment,
   adminRejectComment,
   adminDeleteComment
 } from '../../api'
@@ -111,6 +113,12 @@ const reload = () => {
 const approve = async (row) => {
   await adminApproveComment(row.id)
   ElMessage.success('已通过，前台可见')
+  load()
+}
+
+const unapprove = async (row) => {
+  await adminUnapproveComment(row.id)
+  ElMessage.success('已退回待审核，前台已隐藏')
   load()
 }
 

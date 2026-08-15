@@ -36,6 +36,12 @@ public class AdminCommentController {
         return Result.ok();
     }
 
+    @PutMapping("/{id}/unapprove")
+    public Result<Void> unapprove(@PathVariable Long id) {
+        commentService.unapprove(id);
+        return Result.ok();
+    }
+
     @PutMapping("/{id}/reject")
     public Result<Void> reject(@PathVariable Long id) {
         commentService.reject(id);

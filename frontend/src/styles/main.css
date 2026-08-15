@@ -1026,6 +1026,16 @@ html[data-theme='dark'] .markdown-body blockquote {
   padding: 18px;
 }
 
+.login-identity {
+  font-size: 14px;
+  color: var(--accent);
+  background: var(--accent-light);
+  border-radius: 6px;
+  padding: 8px 12px;
+  margin-bottom: 10px;
+  display: inline-block;
+}
+
 .reply-tip {
   font-size: 14px;
   margin-bottom: 10px;

@@ -42,7 +42,10 @@
         回复 @{{ replyTarget.nickname }}
         <a class="cancel-reply" @click="replyTarget = null">取消回复</a>
       </h4>
-      <div class="comment-form-row">
+      <div v-if="isLoggedIn" class="login-identity">
+        🧑 以「{{ userStore.user?.nickname || '博主' }}」身份评论
+      </div>
+      <div v-else class="comment-form-row">
         <input v-model="form.nickname" placeholder="昵称 *" maxlength="50" />
         <input v-model="form.email" placeholder="邮箱 *（不会公开）" maxlength="100" />
         <input v-model="form.website" placeholder="网址（可选）" maxlength="200" />
@@ -52,7 +55,7 @@
           ref="textareaRef"
           v-model="form.content"
           :maxlength="1000"
-          placeholder="说点什么吧…（提交后需审核通过才会展示）"
+          placeholder="说点什么吧…"
           rows="3"
         ></textarea>
         <EmojiPanel @pick="insertEmoji" />
@@ -69,16 +72,18 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
 import EmojiPanel from './EmojiPanel.vue'
 import { getPostComments, submitComment, getSite } from '../../api'
+import { useUserStore } from '../../store/user'
 
 const props = defineProps({
   postId: { type: [String, Number], required: true }
 })
 
+const userStore = useUserStore()
 const comments = ref([])
 const total = ref(0)
 const replyTarget = ref(null)
@@ -86,6 +91,8 @@ const submitting = ref(false)
 const allowComments = ref(true)
 const form = ref({ nickname: '', email: '', website: '', content: '' })
 const textareaRef = ref(null)
+
+const isLoggedIn = computed(() => !!userStore.token)
 
 const formatDate = (d) => (d ? dayjs(d).format('YYYY-MM-DD HH:mm') : '')
 
@@ -109,28 +116,34 @@ const openSite = (url) => {
 }
 
 const submit = async () => {
-  if (!form.value.nickname.trim()) {
-    ElMessage.warning('请填写昵称')
-    return
-  }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.value.email.trim())) {
-    ElMessage.warning('请填写正确的邮箱')
-    return
-  }
   if (!form.value.content.trim()) {
     ElMessage.warning('请填写评论内容')
     return
   }
+  // 未登录访客需校验身份信息；登录用户由后端自动识别
+  if (!isLoggedIn.value) {
+    if (!form.value.nickname.trim()) {
+      ElMessage.warning('请填写昵称')
+      return
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.value.email.trim())) {
+      ElMessage.warning('请填写正确的邮箱')
+      return
+    }
+  }
   submitting.value = true
   try {
-    await submitComment(props.postId, {
-      nickname: form.value.nickname.trim(),
-      email: form.value.email.trim(),
-      website: form.value.website.trim() || null,
+    const payload = {
       content: form.value.content.trim(),
       parentId: replyTarget.value?.id || null
-    })
-    ElMessage.success('评论已提交，审核通过后将展示')
+    }
+    if (!isLoggedIn.value) {
+      payload.nickname = form.value.nickname.trim()
+      payload.email = form.value.email.trim()
+      payload.website = form.value.website.trim() || null
+    }
+    await submitComment(props.postId, payload)
+    ElMessage.success('评论成功')
     form.value.content = ''
     replyTarget.value = null
     load()

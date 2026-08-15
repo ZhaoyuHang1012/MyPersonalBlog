@@ -42,6 +42,7 @@ export const getPostComments = (postId) => http.get(`/posts/${postId}/comments`)
 export const submitComment = (postId, data) => http.post(`/posts/${postId}/comments`, data)
 export const adminListComments = (params) => http.get('/admin/comments', { params })
 export const adminApproveComment = (id) => http.put(`/admin/comments/${id}/approve`)
+export const adminUnapproveComment = (id) => http.put(`/admin/comments/${id}/unapprove`)
 export const adminRejectComment = (id) => http.put(`/admin/comments/${id}/reject`)
 export const adminDeleteComment = (id) => http.delete(`/admin/comments/${id}`)
 
