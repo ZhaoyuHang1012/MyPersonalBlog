@@ -35,11 +35,28 @@ public class AlbumService {
 
     // ==================== 前台 ====================
 
-    /** 大厅：全站公开相册组 */
-    public List<AlbumGroupVO> listPublic() {
-        List<AlbumGroup> groups = groupMapper.selectList(new QueryWrapper<AlbumGroup>()
-                .eq("visibility", 1).orderByDesc("id"));
-        return toVOList(groups);
+    /** 大厅：登录用户展示自己+好友的公开相册；未登录展示全部公开相册 */
+    public List<AlbumGroupVO> listPublic(Long viewerId) {
+        QueryWrapper<AlbumGroup> qw = new QueryWrapper<>();
+        qw.eq("visibility", 1);
+        if (viewerId != null) {
+            qw.and(w -> w.eq("user_id", viewerId)
+                    .or().inSql("user_id",
+                            "SELECT friend_id FROM friends WHERE user_id = " + viewerId));
+        }
+        qw.orderByDesc("id");
+        return toVOList(groupMapper.selectList(qw));
+    }
+
+    /** 按 ID 列表组装 VO（归档列表等场景） */
+    public List<AlbumGroupVO> listGroupsByIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<AlbumGroup> groups = groupMapper.selectBatchIds(ids);
+        Map<Long, AlbumGroup> byId = groups.stream().collect(Collectors.toMap(AlbumGroup::getId, g -> g));
+        List<AlbumGroup> ordered = ids.stream().map(byId::get).filter(Objects::nonNull).collect(Collectors.toList());
+        return toVOList(ordered);
     }
 
     /** 相册详情（公开组任何人可看；私有组仅所有者） */

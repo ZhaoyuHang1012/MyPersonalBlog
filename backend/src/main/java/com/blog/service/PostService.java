@@ -49,20 +49,24 @@ public class PostService {
     // ==================== 前台 ====================
 
     /**
-     * 大厅：所有「开放」的已发布文章
+     * 大厅：登录用户展示自己+好友的公开文章；未登录展示全部公开文章
+     * 支持多标签（同时包含所选全部标签）
      */
-    public PageResult<PostVO> listHall(int page, int size, Long categoryId, Long tagId, String keyword) {
+    public PageResult<PostVO> listHall(int page, int size, Long categoryId, List<Long> tagIds,
+                                       String keyword, Long viewerId) {
         QueryWrapper<Post> qw = publicWrapper();
+        if (viewerId != null) {
+            qw.and(w -> w.eq("user_id", viewerId)
+                    .or().inSql("user_id",
+                            "SELECT friend_id FROM friends WHERE user_id = " + viewerId));
+        }
         if (categoryId != null) {
             qw.eq("category_id", categoryId);
         }
-        if (tagId != null) {
-            List<Long> postIds = postTagMapper.selectList(new QueryWrapper<PostTag>().eq("tag_id", tagId))
-                    .stream().map(PostTag::getPostId).collect(Collectors.toList());
-            if (postIds.isEmpty()) {
-                return new PageResult<>(new ArrayList<>(), 0, page, size);
-            }
-            qw.in("id", postIds);
+        if (tagIds != null && !tagIds.isEmpty()) {
+            String ids = tagIds.stream().map(String::valueOf).collect(Collectors.joining(","));
+            qw.inSql("id", "SELECT post_id FROM post_tag WHERE tag_id IN (" + ids + ") " +
+                    "GROUP BY post_id HAVING COUNT(DISTINCT tag_id) = " + tagIds.size());
         }
         if (keyword != null && !keyword.isBlank()) {
             qw.and(w -> w.like("title", keyword).or().like("content_md", keyword));
@@ -71,6 +75,17 @@ public class PostService {
         Page<Post> result = postMapper.selectPage(new Page<>(page, size), qw);
         return new PageResult<>(toVOList(result.getRecords(), false),
                 result.getTotal(), result.getCurrent(), result.getSize());
+    }
+
+    /** 按 ID 列表组装 VO（归档列表等场景） */
+    public List<PostVO> listByIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<Post> posts = postMapper.selectBatchIds(ids);
+        Map<Long, Post> byId = posts.stream().collect(Collectors.toMap(Post::getId, p -> p));
+        List<Post> ordered = ids.stream().map(byId::get).filter(Objects::nonNull).collect(Collectors.toList());
+        return toVOList(ordered, false);
     }
 
     /** 某用户的公开文章列表（个人博客页） */

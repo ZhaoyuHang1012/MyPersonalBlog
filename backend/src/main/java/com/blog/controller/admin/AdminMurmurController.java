@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -36,6 +37,11 @@ public class AdminMurmurController {
     @PostMapping
     public Result<MurmurVO> create(@Valid @RequestBody MurmurRequest request) {
         return Result.ok(murmurService.create(SecurityUtil.currentUserId(), request));
+    }
+
+    @PutMapping("/{id}")
+    public Result<MurmurVO> update(@PathVariable Long id, @Valid @RequestBody MurmurRequest request) {
+        return Result.ok(murmurService.update(SecurityUtil.currentUserId(), SecurityUtil.isAdmin(), id, request));
     }
 
     @DeleteMapping("/{id}")

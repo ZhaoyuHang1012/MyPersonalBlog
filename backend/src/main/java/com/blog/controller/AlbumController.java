@@ -25,7 +25,7 @@ public class AlbumController {
 
     @GetMapping
     public Result<List<AlbumGroupVO>> list() {
-        return Result.ok(albumService.listPublic());
+        return Result.ok(albumService.listPublic(SecurityUtil.currentUserId()));
     }
 
     @GetMapping("/{id}")

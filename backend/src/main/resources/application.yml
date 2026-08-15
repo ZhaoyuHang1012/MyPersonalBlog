@@ -11,6 +11,11 @@ spring:
     password: blog123456
   jackson:
     time-zone: GMT+8
+  servlet:
+    multipart:
+      # 上传体积上限放宽（实际存储仍受用户配额约束）
+      max-file-size: 2GB
+      max-request-size: 2GB
 
 mybatis-plus:
   configuration:
@@ -32,10 +37,10 @@ blog:
   upload:
     # 上传文件存储目录（相对后端运行目录，即项目根 uploads），按用户名分目录
     dir: ../uploads
-    # 图片单文件最大 10MB
-    max-size: 10485760
-    # 视频单文件最大 200MB
-    video-max-size: 209715200
+    # 图片单文件最大 100MB
+    max-size: 104857600
+    # 视频单文件最大 2GB
+    video-max-size: 2147483648
   # RSS 中的站点地址（部署到服务器后请改为实际域名）
   site-url: http://localhost:8080
   # 普通用户默认存储配额（字节），默认 1GB

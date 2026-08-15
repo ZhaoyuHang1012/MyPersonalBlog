@@ -36,12 +36,30 @@ public class MurmurService {
     private final UserMapper userMapper;
     private final ObjectMapper objectMapper;
 
-    /** 大厅：全站公开说说流 */
-    public PageResult<MurmurVO> listPublic(int page, int size) {
-        Page<Murmur> result = murmurMapper.selectPage(new Page<>(page, size),
-                new QueryWrapper<Murmur>().eq("visibility", 1).orderByDesc("id"));
+    /** 大厅：登录用户展示自己+好友的公开说说；未登录展示全部公开说说 */
+    public PageResult<MurmurVO> listPublic(int page, int size, Long viewerId) {
+        QueryWrapper<Murmur> qw = new QueryWrapper<>();
+        qw.eq("visibility", 1);
+        if (viewerId != null) {
+            qw.and(w -> w.eq("user_id", viewerId)
+                    .or().inSql("user_id",
+                            "SELECT friend_id FROM friends WHERE user_id = " + viewerId));
+        }
+        qw.orderByDesc("id");
+        Page<Murmur> result = murmurMapper.selectPage(new Page<>(page, size), qw);
         return new PageResult<>(toVOList(result.getRecords()), result.getTotal(),
                 result.getCurrent(), result.getSize());
+    }
+
+    /** 按 ID 列表组装 VO（归档列表等场景） */
+    public List<MurmurVO> listByIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<Murmur> murmurs = murmurMapper.selectBatchIds(ids);
+        Map<Long, Murmur> byId = murmurs.stream().collect(Collectors.toMap(Murmur::getId, m -> m));
+        List<Murmur> ordered = ids.stream().map(byId::get).filter(Objects::nonNull).collect(Collectors.toList());
+        return toVOList(ordered);
     }
 
     /** 我的/全部说说（普通用户仅自己的，管理员全部） */
@@ -69,6 +87,27 @@ public class MurmurService {
         murmur.setImages(images.isEmpty() ? null : writeImages(images));
         murmur.setCreatedAt(LocalDateTime.now());
         murmurMapper.insert(murmur);
+        return toVOList(List.of(murmur)).get(0);
+    }
+
+    /** 编辑说说（内容/配图/可见性） */
+    @Transactional
+    public MurmurVO update(Long operatorId, boolean isAdmin, Long id, MurmurRequest request) {
+        Murmur murmur = murmurMapper.selectById(id);
+        if (murmur == null) {
+            throw new BizException(404, "说说不存在");
+        }
+        if (!isAdmin && !operatorId.equals(murmur.getUserId())) {
+            throw new BizException(403, "无权修改他人说说");
+        }
+        List<String> images = normalizeImages(request.getImages());
+        if (images.size() > MAX_IMAGES) {
+            throw new BizException("配图最多 " + MAX_IMAGES + " 张");
+        }
+        murmur.setContent(request.getContent().trim());
+        murmur.setVisibility(request.getVisibility() == null ? 1 : request.getVisibility());
+        murmur.setImages(images.isEmpty() ? null : writeImages(images));
+        murmurMapper.updateById(murmur);
         return toVOList(List.of(murmur)).get(0);
     }
 
