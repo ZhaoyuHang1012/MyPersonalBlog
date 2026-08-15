@@ -13,17 +13,27 @@
 
       <div v-loading="loading" class="media-grid">
         <div v-for="(f, idx) in files" :key="f.name" class="media-item">
+          <!-- 视频：直接内嵌播放器预览 -->
+          <video
+            v-if="f.mediaType === 'video'"
+            class="media-thumb media-video"
+            :src="f.url"
+            controls
+            preload="metadata"
+          ></video>
+          <!-- 图片：点击放大预览 -->
           <el-image
+            v-else
             class="media-thumb"
             :src="f.url"
             :preview-src-list="previewList"
-            :initial-index="idx"
+            :initial-index="imageIndex(f)"
             fit="cover"
             preview-teleported
             lazy
           />
           <div class="media-info">
-            <span class="media-size">{{ formatSize(f.size) }}</span>
+            <span class="media-size">{{ f.mediaType === 'video' ? '🎬 ' : '🖼 ' }}{{ formatSize(f.size) }}</span>
             <div class="media-actions">
               <el-button link type="primary" size="small" @click="copyUrl(f)">复制链接</el-button>
               <el-button link type="danger" size="small" @click="remove(f)">删除</el-button>
@@ -32,7 +42,7 @@
         </div>
         <el-empty
           v-if="!files.length && !loading"
-          description="暂无图片，点击左上角「上传图片」"
+          description="暂无文件，点击左上角「上传图片」"
           style="grid-column: 1 / -1"
         />
       </div>
@@ -62,7 +72,13 @@ const page = ref(1)
 const size = ref(12)
 const loading = ref(false)
 
-const previewList = computed(() => files.value.map((f) => f.url))
+const previewList = computed(() =>
+  files.value.filter((f) => f.mediaType !== 'video').map((f) => f.url)
+)
+
+// 图片在预览列表中的索引（视频不参与图片预览）
+const imageIndex = (f) =>
+  files.value.filter((x) => x.mediaType !== 'video').findIndex((x) => x.name === f.name)
 
 const load = async () => {
   loading.value = true
@@ -151,6 +167,12 @@ onMounted(load)
   display: block;
   cursor: zoom-in;
   background: #f3f4f6;
+}
+
+.media-video {
+  cursor: pointer;
+  background: #000;
+  object-fit: contain;
 }
 
 .media-info {
