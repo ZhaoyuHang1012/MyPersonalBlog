@@ -18,7 +18,7 @@
       </div>
       <div class="post-content markdown-body" v-html="post.contentHtml"></div>
       <div class="post-like-bar">
-        <LikeButton :target-type="'post'" :target-id="post.id" />
+        <LikeButton :target-type="'post'" :target-id="post.id" @changed="refreshLikers" />
         <div v-if="likers.length" class="liker-avatars">
           <el-tooltip v-for="l in likers" :key="l.id" :content="l.nickname" placement="top">
             <el-avatar :size="30" :src="l.avatar || undefined" style="background: #3a7afe">
@@ -75,6 +75,16 @@ const load = async () => {
   } catch (e) {
     notFound.value = true
     document.title = '文章不存在 - 博客'
+  }
+}
+
+/** 点赞/取消后刷新点赞人列表，让「等 N 人点赞」即时更新 */
+const refreshLikers = async () => {
+  if (!post.value) return
+  try {
+    likers.value = await getLikers('post', post.value.id)
+  } catch (e) {
+    /* ignore */
   }
 }
 

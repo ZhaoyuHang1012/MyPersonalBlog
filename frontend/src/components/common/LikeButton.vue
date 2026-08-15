@@ -21,6 +21,8 @@ const props = defineProps({
   targetId: { type: [Number, String], required: true }
 })
 
+const emit = defineEmits(['changed'])
+
 const router = useRouter()
 const userStore = useUserStore()
 const loggedIn = computed(() => !!userStore.token)
@@ -42,6 +44,7 @@ const toggle = async () => {
       count.value += 1
     }
     liked.value = !liked.value
+    emit('changed', { liked: liked.value, count: count.value })
   } catch (e) {
     /* 拦截器已提示 */
   }
