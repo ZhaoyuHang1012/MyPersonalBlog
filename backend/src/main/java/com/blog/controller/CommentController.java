@@ -4,7 +4,6 @@ import com.blog.common.Result;
 import com.blog.dto.CommentRequest;
 import com.blog.service.CommentService;
 import com.blog.vo.CommentVO;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,7 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 /**
- * 前台评论接口
+ * 前台评论接口（浏览公开，发表需登录）
  */
 @RestController
 @RequestMapping("/api/posts")
@@ -34,26 +33,17 @@ public class CommentController {
 
     @PostMapping("/{postId}/comments")
     public Result<Void> submit(@PathVariable Long postId,
-                               @RequestBody CommentRequest request,
-                               HttpServletRequest http) {
-        commentService.submit(postId, request, clientIp(http), currentUserId());
+                               @RequestBody CommentRequest request) {
+        commentService.submit(postId, request, currentUserId());
         return Result.ok();
     }
 
-    /** 从 SecurityContext 获取当前登录用户 ID，未登录返回 null */
+    /** 从 SecurityContext 获取当前登录用户 ID（接口已受 Spring Security 保护，此处仅作兜底） */
     private Long currentUserId() {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();
         if (auth != null && auth.getPrincipal() instanceof Long uid) {
             return uid;
         }
         return null;
-    }
-
-    private String clientIp(HttpServletRequest request) {
-        String forwarded = request.getHeader("X-Forwarded-For");
-        if (forwarded != null && !forwarded.isBlank()) {
-            return forwarded.split(",")[0].trim();
-        }
-        return request.getRemoteAddr();
     }
 }

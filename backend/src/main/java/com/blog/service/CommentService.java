@@ -12,7 +12,6 @@ import com.blog.entity.User;
 import com.blog.mapper.CommentMapper;
 import com.blog.mapper.PostMapper;
 import com.blog.mapper.UserMapper;
-import com.blog.util.IpRateLimiter;
 import com.blog.vo.CommentVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -36,7 +35,6 @@ public class CommentService {
     private final PostMapper postMapper;
     private final UserMapper userMapper;
     private final SiteService siteService;
-    private final IpRateLimiter rateLimiter;
 
     // ==================== 前台 ====================
 
@@ -71,10 +69,9 @@ public class CommentService {
     }
 
     /**
-     * 提交评论（默认直接通过）
-     * @param userId 登录用户 ID，null 表示访客
+     * 提交评论（仅登录用户，身份自动识别，默认直接通过）
      */
-    public void submit(Long postId, CommentRequest request, String ip, Long userId) {
+    public void submit(Long postId, CommentRequest request, Long userId) {
         Post post = postMapper.selectById(postId);
         if (post == null || post.getStatus() != 1) {
             throw new BizException(404, "文章不存在");
@@ -88,6 +85,13 @@ public class CommentService {
         if (request.getContent().trim().length() > 1000) {
             throw new BizException("评论内容不能超过 1000 个字符");
         }
+        if (userId == null) {
+            throw new BizException(401, "请先登录后再评论");
+        }
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BizException(401, "登录状态已失效，请重新登录");
+        }
         if (request.getParentId() != null) {
             Comment parent = commentMapper.selectById(request.getParentId());
             if (parent == null || !parent.getPostId().equals(postId)) {
@@ -99,35 +103,9 @@ public class CommentService {
         comment.setPostId(postId);
         comment.setParentId(request.getParentId());
         comment.setContent(request.getContent().trim());
-
-        if (userId != null) {
-            // 已登录：自动使用账号昵称
-            User user = userMapper.selectById(userId);
-            if (user == null) {
-                throw new BizException(401, "登录状态已失效");
-            }
-            comment.setNickname(user.getNickname());
-            comment.setEmail("");
-            comment.setWebsite(null);
-        } else {
-            // 访客：限流 + 手动填写身份
-            if (!rateLimiter.tryAcquire(ip)) {
-                throw new BizException("操作太频繁，请稍后再试");
-            }
-            if (request.getNickname() == null || request.getNickname().isBlank()) {
-                throw new BizException("昵称不能为空");
-            }
-            if (request.getEmail() == null || request.getEmail().isBlank()) {
-                throw new BizException("邮箱不能为空");
-            }
-            if (!request.getEmail().matches("^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$")) {
-                throw new BizException("邮箱格式不正确");
-            }
-            comment.setNickname(request.getNickname().trim());
-            comment.setEmail(request.getEmail().trim());
-            comment.setWebsite(request.getWebsite() == null ? null : request.getWebsite().trim());
-        }
-
+        comment.setNickname(user.getNickname());
+        comment.setEmail("");
+        comment.setWebsite(null);
         // 默认直接通过
         comment.setStatus(1);
         comment.setCreatedAt(LocalDateTime.now());

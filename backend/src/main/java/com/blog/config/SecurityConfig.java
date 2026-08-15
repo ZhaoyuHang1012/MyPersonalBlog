@@ -41,7 +41,7 @@ public class SecurityConfig {
                                 "/api/categories/**",
                                 "/api/tags/**",
                                 "/api/site/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/posts/*/comments", "/api/links/apply").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/links/apply").permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/uploads/**", "/api/rss", "/api/archive",
                                 "/api/links", "/api/murmurs", "/api/albums").permitAll()

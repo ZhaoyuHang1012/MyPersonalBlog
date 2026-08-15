@@ -1036,6 +1036,24 @@ html[data-theme='dark'] .markdown-body blockquote {
   display: inline-block;
 }
 
+.comment-login-tip {
+  margin-top: 28px;
+  text-align: center;
+  background: var(--accent-light);
+  color: var(--accent);
+  border: 1px dashed var(--accent);
+  border-radius: 10px;
+  padding: 16px;
+  font-size: 15px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.comment-login-tip:hover {
+  background: var(--accent);
+  color: #fff;
+}
+
 .reply-tip {
   font-size: 14px;
   margin-bottom: 10px;

@@ -36,19 +36,19 @@
 
     <div v-if="!comments.length" class="comment-empty">暂无评论，来抢沙发～</div>
 
-    <!-- 提交表单 -->
-    <div v-if="allowComments" class="comment-form">
+    <!-- 未登录：引导登录 -->
+    <div v-if="allowComments && !isLoggedIn" class="comment-login-tip" @click="goLogin">
+      🔒 登录后参与评论
+    </div>
+
+    <!-- 发表表单（仅登录用户，身份自动识别） -->
+    <div v-else-if="allowComments" class="comment-form">
       <h4 v-if="replyTarget" class="reply-tip">
         回复 @{{ replyTarget.nickname }}
         <a class="cancel-reply" @click="replyTarget = null">取消回复</a>
       </h4>
-      <div v-if="isLoggedIn" class="login-identity">
+      <div class="login-identity">
         🧑 以「{{ userStore.user?.nickname || '博主' }}」身份评论
-      </div>
-      <div v-else class="comment-form-row">
-        <input v-model="form.nickname" placeholder="昵称 *" maxlength="50" />
-        <input v-model="form.email" placeholder="邮箱 *（不会公开）" maxlength="100" />
-        <input v-model="form.website" placeholder="网址（可选）" maxlength="200" />
       </div>
       <div class="comment-input-wrap">
         <textarea
@@ -73,6 +73,7 @@
 
 <script setup>
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
 import EmojiPanel from './EmojiPanel.vue'
@@ -83,16 +84,23 @@ const props = defineProps({
   postId: { type: [String, Number], required: true }
 })
 
+const route = useRoute()
+const router = useRouter()
 const userStore = useUserStore()
 const comments = ref([])
 const total = ref(0)
 const replyTarget = ref(null)
 const submitting = ref(false)
 const allowComments = ref(true)
-const form = ref({ nickname: '', email: '', website: '', content: '' })
+const form = ref({ content: '' })
 const textareaRef = ref(null)
 
 const isLoggedIn = computed(() => !!userStore.token)
+
+/** 未登录点击 → 跳转登录页，登录后返回当前文章 */
+const goLogin = () => {
+  router.push({ path: '/admin/login', query: { redirect: route.fullPath } })
+}
 
 const formatDate = (d) => (d ? dayjs(d).format('YYYY-MM-DD HH:mm') : '')
 
@@ -120,29 +128,12 @@ const submit = async () => {
     ElMessage.warning('请填写评论内容')
     return
   }
-  // 未登录访客需校验身份信息；登录用户由后端自动识别
-  if (!isLoggedIn.value) {
-    if (!form.value.nickname.trim()) {
-      ElMessage.warning('请填写昵称')
-      return
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.value.email.trim())) {
-      ElMessage.warning('请填写正确的邮箱')
-      return
-    }
-  }
   submitting.value = true
   try {
-    const payload = {
+    await submitComment(props.postId, {
       content: form.value.content.trim(),
       parentId: replyTarget.value?.id || null
-    }
-    if (!isLoggedIn.value) {
-      payload.nickname = form.value.nickname.trim()
-      payload.email = form.value.email.trim()
-      payload.website = form.value.website.trim() || null
-    }
-    await submitComment(props.postId, payload)
+    })
     ElMessage.success('评论成功')
     form.value.content = ''
     replyTarget.value = null
