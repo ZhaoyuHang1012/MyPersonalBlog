@@ -1,45 +1,146 @@
 package com.blog.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.blog.common.BizException;
+import com.blog.common.PageResult;
+import com.blog.dto.MurmurRequest;
 import com.blog.entity.Murmur;
+import com.blog.entity.User;
 import com.blog.mapper.MurmurMapper;
+import com.blog.mapper.UserMapper;
+import com.blog.vo.MurmurVO;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
- * 说说服务
+ * 说说服务：个人动态（公开大厅可见，私密仅自己），支持配图
  */
 @Service
 @RequiredArgsConstructor
 public class MurmurService {
 
-    private final MurmurMapper murmurMapper;
+    private static final int MAX_IMAGES = 9;
 
-    /** 前台：全部说说（倒序，最多 200 条） */
-    public List<Murmur> list() {
-        return murmurMapper.selectList(new QueryWrapper<Murmur>()
-                .orderByDesc("id")
-                .last("LIMIT 200"));
+    private final MurmurMapper murmurMapper;
+    private final UserMapper userMapper;
+    private final ObjectMapper objectMapper;
+
+    /** 大厅：全站公开说说流 */
+    public PageResult<MurmurVO> listPublic(int page, int size) {
+        Page<Murmur> result = murmurMapper.selectPage(new Page<>(page, size),
+                new QueryWrapper<Murmur>().eq("visibility", 1).orderByDesc("id"));
+        return new PageResult<>(toVOList(result.getRecords()), result.getTotal(),
+                result.getCurrent(), result.getSize());
+    }
+
+    /** 我的/全部说说（普通用户仅自己的，管理员全部） */
+    public PageResult<MurmurVO> listAdmin(Long operatorId, boolean isAdmin, int page, int size) {
+        QueryWrapper<Murmur> qw = new QueryWrapper<>();
+        if (!isAdmin) {
+            qw.eq("user_id", operatorId);
+        }
+        qw.orderByDesc("id");
+        Page<Murmur> result = murmurMapper.selectPage(new Page<>(page, size), qw);
+        return new PageResult<>(toVOList(result.getRecords()), result.getTotal(),
+                result.getCurrent(), result.getSize());
     }
 
     @Transactional
-    public Murmur create(String content) {
+    public MurmurVO create(Long userId, MurmurRequest request) {
+        List<String> images = normalizeImages(request.getImages());
+        if (images.size() > MAX_IMAGES) {
+            throw new BizException("配图最多 " + MAX_IMAGES + " 张");
+        }
         Murmur murmur = new Murmur();
-        murmur.setContent(content.trim());
+        murmur.setUserId(userId);
+        murmur.setContent(request.getContent().trim());
+        murmur.setVisibility(request.getVisibility() == null ? 1 : request.getVisibility());
+        murmur.setImages(images.isEmpty() ? null : writeImages(images));
         murmur.setCreatedAt(LocalDateTime.now());
         murmurMapper.insert(murmur);
-        return murmur;
+        return toVOList(List.of(murmur)).get(0);
     }
 
     @Transactional
-    public void delete(Long id) {
-        if (murmurMapper.deleteById(id) == 0) {
+    public void delete(Long operatorId, boolean isAdmin, Long id) {
+        Murmur murmur = murmurMapper.selectById(id);
+        if (murmur == null) {
             throw new BizException(404, "说说不存在");
         }
+        if (!isAdmin && !operatorId.equals(murmur.getUserId())) {
+            throw new BizException(403, "无权删除他人说说");
+        }
+        murmurMapper.deleteById(id);
+    }
+
+    private List<String> normalizeImages(List<String> images) {
+        if (images == null) {
+            return new ArrayList<>();
+        }
+        return images.stream().filter(Objects::nonNull)
+                .map(String::trim).filter(s -> !s.isEmpty())
+                .filter(s -> s.startsWith("/uploads/") || s.startsWith("http"))
+                .distinct().collect(Collectors.toList());
+    }
+
+    private String writeImages(List<String> images) {
+        try {
+            return objectMapper.writeValueAsString(images);
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    private List<String> readImages(String json) {
+        if (json == null || json.isBlank()) {
+            return new ArrayList<>();
+        }
+        try {
+            return objectMapper.readValue(json, new TypeReference<List<String>>() {
+            });
+        } catch (Exception e) {
+            return new ArrayList<>();
+        }
+    }
+
+    private List<MurmurVO> toVOList(List<Murmur> murmurs) {
+        if (murmurs == null || murmurs.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<Long> userIds = murmurs.stream().map(Murmur::getUserId)
+                .filter(Objects::nonNull).distinct().collect(Collectors.toList());
+        Map<Long, User> users = userIds.isEmpty() ? Map.of()
+                : userMapper.selectBatchIds(userIds).stream()
+                .collect(Collectors.toMap(User::getId, u -> u));
+        return murmurs.stream().map(m -> {
+            MurmurVO vo = new MurmurVO();
+            vo.setId(m.getId());
+            vo.setUserId(m.getUserId());
+            vo.setContent(m.getContent());
+            vo.setVisibility(m.getVisibility());
+            vo.setImages(readImages(m.getImages()));
+            vo.setCreatedAt(m.getCreatedAt());
+            User u = users.get(m.getUserId());
+            if (u != null) {
+                MurmurVO.AuthorVO av = new MurmurVO.AuthorVO();
+                av.setId(u.getId());
+                av.setUsername(u.getUsername());
+                av.setNickname(u.getNickname());
+                av.setAvatar(u.getAvatar());
+                vo.setAuthor(av);
+            }
+            return vo;
+        }).collect(Collectors.toList());
     }
 }

@@ -19,5 +19,8 @@ public class UploadFileVO {
     /** 文件大小（字节） */
     private long size;
 
+    /** 媒体类型：image / video */
+    private String mediaType;
+
     private LocalDateTime lastModified;
 }

@@ -8,24 +8,25 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 说说（动态）
+ * 相册照片（图片或视频）
  */
 @Data
-@TableName("murmurs")
-public class Murmur {
+@TableName("album_photos")
+public class AlbumPhoto {
 
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    private Long groupId;
+
     private Long userId;
 
-    private String content;
+    private String url;
 
-    /** 0 仅自己可见 1 开放 */
-    private Integer visibility;
+    /** image / video */
+    private String mediaType;
 
-    /** 配图 URL JSON 数组 */
-    private String images;
+    private String description;
 
     private LocalDateTime createdAt;
 }

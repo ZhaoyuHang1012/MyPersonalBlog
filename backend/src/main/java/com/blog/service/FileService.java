@@ -26,19 +26,23 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * 文件服务：每个用户独立存储目录（uploads/{userId}/...）+ 配额控制
+ * 文件服务：每个用户独立存储目录（uploads/{username}/...），支持图片与视频，配额控制
  */
 @Slf4j
 @Service
 public class FileService {
 
-    private static final Set<String> ALLOWED_EXT = Set.of("jpg", "jpeg", "png", "gif", "webp", "bmp");
+    private static final Set<String> IMAGE_EXT = Set.of("jpg", "jpeg", "png", "gif", "webp", "bmp");
+    private static final Set<String> VIDEO_EXT = Set.of("mp4", "webm", "mov", "m4v", "avi");
 
     @Value("${blog.upload.dir:../uploads}")
     private String uploadDir;
 
     @Value("${blog.upload.max-size:10485760}")
-    private long maxSize;
+    private long imageMaxSize;
+
+    @Value("${blog.upload.video-max-size:209715200}")
+    private long videoMaxSize;
 
     private final UserMapper userMapper;
 
@@ -50,8 +54,16 @@ public class FileService {
         return Paths.get(uploadDir).toAbsolutePath().normalize();
     }
 
+    private String usernameOf(Long userId) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BizException(401, "登录状态已失效");
+        }
+        return user.getUsername();
+    }
+
     private Path userDir(Long userId) {
-        return baseDir().resolve(String.valueOf(userId));
+        return baseDir().resolve(usernameOf(userId));
     }
 
     /** 当前用户已用空间（字节） */
@@ -80,26 +92,30 @@ public class FileService {
     }
 
     /**
-     * 保存上传文件到当前用户的存储空间
+     * 保存上传文件到当前用户的存储空间（图片/视频分类型限制大小）
      */
     public UploadFileVO store(Long userId, MultipartFile file) {
         if (file == null || file.isEmpty()) {
             throw new BizException("请选择要上传的文件");
         }
-        if (file.getSize() > maxSize) {
-            throw new BizException("文件大小不能超过 " + (maxSize / 1024 / 1024) + "MB");
-        }
         String ext = extractExt(file.getOriginalFilename());
-        if (!ALLOWED_EXT.contains(ext)) {
-            throw new BizException("仅支持图片格式：jpg / jpeg / png / gif / webp / bmp");
+        boolean isVideo = VIDEO_EXT.contains(ext);
+        if (!IMAGE_EXT.contains(ext) && !isVideo) {
+            throw new BizException("仅支持图片（jpg/jpeg/png/gif/webp/bmp）或视频（mp4/webm/mov/m4v/avi）");
+        }
+        long limit = isVideo ? videoMaxSize : imageMaxSize;
+        if (file.getSize() > limit) {
+            String label = isVideo ? "视频" : "图片";
+            throw new BizException(label + "大小不能超过 " + (limit / 1024 / 1024) + "MB");
         }
         // 配额校验
         long quota = quotaOf(userId);
         if (usage(userId) + file.getSize() > quota) {
             throw new BizException("存储空间不足（配额 " + (quota / 1024 / 1024) + "MB），请清理后重试");
         }
+        String username = usernameOf(userId);
         LocalDate now = LocalDate.now();
-        String rel = String.format("%d/%d/%02d/%s.%s", userId, now.getYear(), now.getMonthValue(),
+        String rel = String.format("%s/%d/%02d/%s.%s", username, now.getYear(), now.getMonthValue(),
                 UUID.randomUUID().toString().replace("-", ""), ext);
         Path target = baseDir().resolve(rel).normalize();
         if (!target.startsWith(baseDir())) {
@@ -116,6 +132,7 @@ public class FileService {
         vo.setName(rel);
         vo.setUrl("/uploads/" + rel);
         vo.setSize(file.getSize());
+        vo.setMediaType(isVideo ? "video" : "image");
         vo.setLastModified(LocalDateTime.now());
         return vo;
     }
@@ -143,6 +160,7 @@ public class FileService {
                         } catch (IOException e) {
                             vo.setSize(0);
                         }
+                        vo.setMediaType(resolveMediaType(rel));
                         return vo;
                     })
                     .sorted(Comparator.comparing(UploadFileVO::getLastModified,
@@ -169,7 +187,7 @@ public class FileService {
         if (!target.startsWith(baseDir()) || !Files.exists(target)) {
             throw new BizException(404, "文件不存在");
         }
-        if (!isAdmin && !name.startsWith(userId + "/")) {
+        if (!isAdmin && !name.startsWith(usernameOf(userId) + "/")) {
             throw new BizException(403, "无权删除他人文件");
         }
         try {
@@ -180,10 +198,15 @@ public class FileService {
         }
     }
 
-    private String extractExt(String originalFilename) {
-        if (originalFilename == null || !originalFilename.contains(".")) {
+    private String resolveMediaType(String relPath) {
+        String ext = extractExt(relPath);
+        return VIDEO_EXT.contains(ext) ? "video" : "image";
+    }
+
+    private String extractExt(String filename) {
+        if (filename == null || !filename.contains(".")) {
             return "";
         }
-        return originalFilename.substring(originalFilename.lastIndexOf('.') + 1).toLowerCase();
+        return filename.substring(filename.lastIndexOf('.') + 1).toLowerCase();
     }
 }

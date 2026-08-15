@@ -42,7 +42,7 @@ public class SecurityConfig {
                         // 公开：前台浏览
                         .requestMatchers(HttpMethod.GET,
                                 "/uploads/**", "/api/rss", "/api/archive",
-                                "/api/links", "/api/murmurs", "/api/albums",
+                                "/api/links", "/api/murmurs/**", "/api/albums/**",
                                 "/api/hall", "/api/users/**",
                                 "/api/posts/**", "/api/categories/**", "/api/tags/**",
                                 "/api/site/**").permitAll()
@@ -53,7 +53,6 @@ public class SecurityConfig {
                                 "/api/admin/site",
                                 "/api/admin/comments/**",
                                 "/api/admin/links/**",
-                                "/api/admin/murmurs/**",
                                 "/api/admin/logs/**",
                                 "/api/admin/stats",
                                 "/api/admin/invites/**").hasRole("ADMIN")
