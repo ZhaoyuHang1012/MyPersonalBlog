@@ -1,0 +1,55 @@
+# =============================================
+# 生产环境配置（服务器部署用）
+# 启动方式: java -jar blog-backend-0.1.0.jar --spring.profiles.active=prod
+# 请先替换下面的 服务器IP / 数据库密码 / JWT 密钥 三个占位符
+# =============================================
+server:
+  port: 8080
+
+spring:
+  application:
+    name: blog-backend
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/blog?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: blog
+    # TODO: 替换为服务器上设置的数据库密码
+    password: CHANGE_ME_DB_PASSWORD
+  jackson:
+    time-zone: GMT+8
+  servlet:
+    multipart:
+      max-file-size: 2GB
+      max-request-size: 2GB
+
+mybatis-plus:
+  configuration:
+    map-underscore-to-camel-case: true
+  global-config:
+    banner: false
+    db-config:
+      id-type: auto
+
+blog:
+  jwt:
+    # TODO: 替换为随机强密钥（例如 openssl rand -base64 48 生成）
+    secret: CHANGE_ME_JWT_SECRET
+    expire-hours: 72
+  site:
+    title: 我的博客
+    subtitle: 记录技术与生活
+    author: 博主
+  upload:
+    # 上传目录（相对后端运行目录）
+    dir: ./uploads
+    max-size: 104857600
+    video-max-size: 2147483648
+  # TODO: 替换为服务器 IP（RSS 等场景使用），如 http://1.2.3.4
+  site-url: http://CHANGE_ME_SERVER_IP
+  quota-default: 1073741824
+
+logging:
+  level:
+    com.blog: info
+  file:
+    name: ./logs/blog.log
