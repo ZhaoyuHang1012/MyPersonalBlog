@@ -1,11 +1,17 @@
 <template>
   <div>
-    <!-- 发布说说（QQ 动态风格） -->
-    <div class="murmur-publish">
+    <!-- 顶部按钮：新建弹窗 -->
+    <div class="toolbar">
+      <div class="spacer"></div>
+      <el-button type="primary" @click="publishVisible = true">➕ 发布说说</el-button>
+    </div>
+
+    <!-- 发布弹窗 -->
+    <el-dialog v-model="publishVisible" title="发布说说" width="520px">
       <el-input
         v-model="content"
         type="textarea"
-        :rows="3"
+        :rows="4"
         maxlength="2000"
         show-word-limit
         placeholder="分享新鲜事…"
@@ -29,9 +35,12 @@
           <el-radio-button :value="1">公开</el-radio-button>
           <el-radio-button :value="0">仅自己可见</el-radio-button>
         </el-radio-group>
-        <el-button type="primary" :loading="publishing" @click="publish">发布</el-button>
       </div>
-    </div>
+      <template #footer>
+        <el-button @click="publishVisible = false">取消</el-button>
+        <el-button type="primary" :loading="publishing" @click="publish">发布</el-button>
+      </template>
+    </el-dialog>
 
     <!-- 我的说说列表 -->
     <div v-for="m in murmurs" :key="m.id" class="murmur-item">
@@ -98,6 +107,7 @@ const content = ref('')
 const pickedImages = ref([])
 const visibility = ref(1)
 const publishing = ref(false)
+const publishVisible = ref(false)
 const murmurs = ref([])
 const total = ref(0)
 const page = ref(1)
@@ -167,6 +177,7 @@ const publish = async () => {
     content.value = ''
     pickedImages.value = []
     visibility.value = 1
+    publishVisible.value = false
     page.value = 1
     load()
   } catch (e) {

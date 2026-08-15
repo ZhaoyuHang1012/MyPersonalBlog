@@ -1,14 +1,29 @@
 <template>
   <div>
-    <!-- 创建相册 -->
-    <div class="album-create">
-      <el-input v-model="newName" placeholder="新相册名称，如：我的旅行" maxlength="50" style="width: 240px" />
-      <el-radio-group v-model="newVisibility" size="small">
-        <el-radio-button :value="1">公开</el-radio-button>
-        <el-radio-button :value="0">仅自己可见</el-radio-button>
-      </el-radio-group>
-      <el-button type="primary" :loading="creating" @click="create">创建相册</el-button>
+    <!-- 顶部按钮：新建弹窗 -->
+    <div class="toolbar">
+      <div class="spacer"></div>
+      <el-button type="primary" @click="createVisible = true">➕ 新建相册</el-button>
     </div>
+
+    <!-- 新建相册弹窗 -->
+    <el-dialog v-model="createVisible" title="新建相册" width="420px">
+      <el-form label-width="70px">
+        <el-form-item label="名称">
+          <el-input v-model="newName" maxlength="50" placeholder="如：我的旅行" />
+        </el-form-item>
+        <el-form-item label="权限">
+          <el-radio-group v-model="newVisibility">
+            <el-radio :value="1">公开</el-radio>
+            <el-radio :value="0">仅自己可见</el-radio>
+          </el-radio-group>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="createVisible = false">取消</el-button>
+        <el-button type="primary" :loading="creating" @click="create">创建</el-button>
+      </template>
+    </el-dialog>
 
     <!-- 我的相册列表 -->
     <div v-if="groups.length" class="my-album-grid">
@@ -95,6 +110,7 @@ const groups = ref([])
 const newName = ref('')
 const newVisibility = ref(1)
 const creating = ref(false)
+const createVisible = ref(false)
 
 const dialogVisible = ref(false)
 const currentGroup = ref(null)
@@ -117,6 +133,7 @@ const create = async () => {
     ElMessage.success('相册已创建')
     newName.value = ''
     newVisibility.value = 1
+    createVisible.value = false
     load()
   } catch (e) {
     /* 拦截器已提示 */
