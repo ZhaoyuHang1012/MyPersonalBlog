@@ -1,7 +1,9 @@
 package com.blog.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.blog.common.BizException;
+import com.blog.dto.AdminUserUpdateRequest;
 import com.blog.dto.PasswordUpdateRequest;
 import com.blog.dto.ProfileUpdateRequest;
 import com.blog.entity.User;
@@ -58,6 +60,65 @@ public class UserService {
             throw new BizException(404, "用户不存在");
         }
         return user;
+    }
+
+    // ==================== 管理员管理 ====================
+
+    /**
+     * 管理员修改任意用户信息（昵称/头像/角色/配额）
+     */
+    @Transactional
+    public UserVO adminUpdate(Long operatorId, Long targetId, AdminUserUpdateRequest request) {
+        User target = requireUser(targetId);
+        UpdateWrapper<User> uw = new UpdateWrapper<User>().eq("id", targetId);
+        boolean hasUpdate = false;
+
+        if (request.getNickname() != null && !request.getNickname().isBlank()) {
+            uw.set("nickname", request.getNickname().trim());
+            hasUpdate = true;
+        }
+        if (request.getAvatar() != null) {
+            uw.set("avatar", request.getAvatar().isBlank() ? null : request.getAvatar().trim());
+            hasUpdate = true;
+        }
+        if (request.getQuota() != null) {
+            if (request.getQuota() <= 0) {
+                throw new BizException("配额必须大于 0");
+            }
+            uw.set("quota", request.getQuota());
+            hasUpdate = true;
+        }
+        if (request.getRole() != null && !request.getRole().isBlank()) {
+            String role = request.getRole().trim();
+            if (!"ADMIN".equals(role) && !"USER".equals(role)) {
+                throw new BizException("角色仅支持 ADMIN / USER");
+            }
+            if (targetId.equals(operatorId)) {
+                throw new BizException("不能修改自己的角色");
+            }
+            // 防止把最后一个管理员降级
+            if ("USER".equals(role) && "ADMIN".equals(target.getRole())) {
+                Long adminCount = userMapper.selectCount(new QueryWrapper<User>().eq("role", "ADMIN"));
+                if (adminCount <= 1) {
+                    throw new BizException("系统至少需要保留一名管理员");
+                }
+            }
+            uw.set("role", role);
+            hasUpdate = true;
+        }
+        if (hasUpdate) {
+            userMapper.update(null, uw);
+        }
+        return getById(targetId);
+    }
+
+    /** 管理员重置任意用户密码 */
+    @Transactional
+    public void adminResetPassword(Long targetId, String newPassword) {
+        requireUser(targetId);
+        userMapper.update(null, new UpdateWrapper<User>()
+                .eq("id", targetId)
+                .set("password", passwordEncoder.encode(newPassword)));
     }
 
     private UserVO toVO(User user) {

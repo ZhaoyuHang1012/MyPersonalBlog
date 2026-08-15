@@ -49,6 +49,7 @@ const routes = [
       { path: 'links', component: () => import('../views/admin/LinkManage.vue') },
       { path: 'murmurs', component: () => import('../views/me/MurmurManage.vue') },
       { path: 'invites', component: () => import('../views/admin/InviteManage.vue') },
+      { path: 'users', component: () => import('../views/admin/UserManage.vue') },
       { path: 'logs', component: () => import('../views/admin/OperationLogs.vue') },
       { path: 'profile', component: () => import('../views/admin/Profile.vue') }
     ]

@@ -57,7 +57,7 @@ public class SecurityConfig {
                                 "/api/admin/logs/**",
                                 "/api/admin/stats",
                                 "/api/admin/invites/**",
-                                "/api/admin/users").hasRole("ADMIN")
+                                "/api/admin/users/**").hasRole("ADMIN")
                         // 其余接口需登录（文章管理/上传/媒体库/个人资料对所有登录用户开放）
                         .anyRequest().authenticated())
                 .exceptionHandling(e -> e.authenticationEntryPoint((request, response, ex) -> {

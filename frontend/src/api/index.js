@@ -76,6 +76,11 @@ export const adminDeleteAlbumPhoto = (photoId) => http.delete(`/admin/albums/pho
 
 // ---- 用户管理（管理员） ----
 export const adminListUsers = () => http.get('/admin/users')
+export const adminUpdateUser = (id, data) => http.put(`/admin/users/${id}`, data)
+export const adminResetPassword = (id, data) => http.put(`/admin/users/${id}/password`, data)
+export const adminGetUserFriends = (id) => http.get(`/admin/users/${id}/friends`)
+export const adminRemoveUserFriend = (userId, friendId) =>
+  http.delete(`/admin/users/friends/${userId}/${friendId}`)
 
 // ---- 统计 / 日志 ----
 export const getStats = () => http.get('/admin/stats')

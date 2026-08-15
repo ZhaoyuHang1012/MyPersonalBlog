@@ -37,6 +37,9 @@
           <el-menu-item index="/admin/invites">
             <el-icon><Key /></el-icon><span>邀请码</span>
           </el-menu-item>
+          <el-menu-item index="/admin/users">
+            <el-icon><UserFilled /></el-icon><span>用户管理</span>
+          </el-menu-item>
           <el-menu-item index="/admin/logs">
             <el-icon><List /></el-icon><span>操作日志</span>
           </el-menu-item>
