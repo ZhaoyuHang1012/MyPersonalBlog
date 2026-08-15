@@ -30,8 +30,10 @@ public class AdminMurmurController {
 
     @GetMapping
     public Result<PageResult<MurmurVO>> list(@RequestParam(defaultValue = "1") int page,
-                                             @RequestParam(defaultValue = "10") int size) {
-        return Result.ok(murmurService.listAdmin(SecurityUtil.currentUserId(), SecurityUtil.isAdmin(), page, size));
+                                             @RequestParam(defaultValue = "10") int size,
+                                             @RequestParam(required = false) Long authorId) {
+        return Result.ok(murmurService.listAdmin(SecurityUtil.currentUserId(), SecurityUtil.isAdmin(),
+                page, size, authorId));
     }
 
     @PostMapping

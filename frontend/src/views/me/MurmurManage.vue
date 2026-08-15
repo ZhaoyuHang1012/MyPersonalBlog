@@ -2,6 +2,21 @@
   <div>
     <!-- 顶部按钮：新建弹窗 -->
     <div class="toolbar">
+      <el-select
+        v-if="userStore.isAdmin"
+        v-model="authorId"
+        clearable
+        placeholder="全部用户"
+        style="width: 200px"
+        @change="reload"
+      >
+        <el-option
+          v-for="u in users"
+          :key="u.id"
+          :label="`${u.nickname} (@${u.username})`"
+          :value="u.id"
+        />
+      </el-select>
       <div class="spacer"></div>
       <el-button type="primary" @click="publishVisible = true">➕ 发布说说</el-button>
     </div>
@@ -45,6 +60,9 @@
     <!-- 我的说说列表 -->
     <div v-for="m in murmurs" :key="m.id" class="murmur-item">
       <div class="murmur-item-head">
+        <span v-if="userStore.isAdmin && m.author" class="murmur-item-author">
+          {{ m.author.nickname }}
+        </span>
         <span class="murmur-item-time">{{ formatDate(m.createdAt) }}</span>
         <el-tag v-if="m.visibility === 0" size="small" type="info">仅自己可见</el-tag>
         <el-button link type="primary" size="small" @click="openEdit(m)">编辑</el-button>
@@ -101,7 +119,12 @@
 import { ref, onMounted } from 'vue'
 import dayjs from 'dayjs'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { adminListMurmurs, adminCreateMurmur, adminUpdateMurmur, adminDeleteMurmur, uploadFile } from '../../api'
+import { adminListMurmurs, adminCreateMurmur, adminUpdateMurmur, adminDeleteMurmur, uploadFile, adminListUsers } from '../../api'
+import { useUserStore } from '../../store/user'
+
+const userStore = useUserStore()
+const users = ref([])
+const authorId = ref(null)
 
 const content = ref('')
 const pickedImages = ref([])
@@ -146,9 +169,18 @@ const saveEdit = async () => {
 const formatDate = (d) => (d ? dayjs(d).format('YYYY-MM-DD HH:mm') : '')
 
 const load = async () => {
-  const data = await adminListMurmurs({ page: page.value, size: size.value })
+  const data = await adminListMurmurs({
+    page: page.value,
+    size: size.value,
+    authorId: authorId.value || undefined
+  })
   murmurs.value = data.records
   total.value = data.total
+}
+
+const reload = () => {
+  page.value = 1
+  load()
 }
 
 const doUploadImage = async ({ file, onSuccess, onError }) => {
@@ -202,7 +234,12 @@ const remove = async (m) => {
   load()
 }
 
-onMounted(load)
+onMounted(() => {
+  if (userStore.isAdmin) {
+    adminListUsers().then((list) => (users.value = list)).catch(() => {})
+  }
+  load()
+})
 </script>
 
 <style scoped>

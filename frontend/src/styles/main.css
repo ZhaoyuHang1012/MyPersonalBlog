@@ -1038,6 +1038,12 @@ a {
   margin-bottom: 8px;
 }
 
+.murmur-item-author {
+  font-weight: 600;
+  color: var(--accent);
+  font-size: 13px;
+}
+
 .murmur-item-time {
   font-size: 12px;
   color: var(--text-secondary);

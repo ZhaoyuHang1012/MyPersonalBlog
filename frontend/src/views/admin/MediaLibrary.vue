@@ -3,10 +3,25 @@
     <h2 class="page-title">媒体库</h2>
     <el-card shadow="never">
       <div class="toolbar">
-        <el-upload :show-file-list="false" :http-request="doUpload" accept="image/*">
-          <el-button type="primary">上传图片</el-button>
+        <el-upload :show-file-list="false" :http-request="doUpload" accept="image/*,video/mp4,video/webm,video/quicktime">
+          <el-button type="primary">上传文件</el-button>
         </el-upload>
-        <span class="upload-tip">支持 jpg / jpeg / png / gif / webp / bmp，单文件不超过 10MB</span>
+        <el-select
+          v-if="userStore.isAdmin"
+          v-model="filterUser"
+          clearable
+          placeholder="全部用户"
+          style="width: 200px"
+          @change="reload"
+        >
+          <el-option
+            v-for="u in users"
+            :key="u.id"
+            :label="`${u.nickname} (@${u.username})`"
+            :value="u.username"
+          />
+        </el-select>
+        <span class="upload-tip">图片 ≤100MB，视频 ≤2GB</span>
         <div class="spacer"></div>
         <el-button @click="load">刷新</el-button>
       </div>
@@ -33,7 +48,12 @@
             lazy
           />
           <div class="media-info">
-            <span class="media-size">{{ f.mediaType === 'video' ? '🎬 ' : '🖼 ' }}{{ formatSize(f.size) }}</span>
+            <span class="media-size">
+              {{ f.mediaType === 'video' ? '🎬 ' : '🖼 ' }}{{ formatSize(f.size) }}
+              <span v-if="userStore.isAdmin && !filterUser" class="media-owner">
+                · {{ f.name.split('/')[0] }}
+              </span>
+            </span>
             <div class="media-actions">
               <el-button link type="primary" size="small" @click="copyUrl(f)">复制链接</el-button>
               <el-button link type="danger" size="small" @click="remove(f)">删除</el-button>
@@ -64,8 +84,12 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { adminListFiles, adminDeleteFile, uploadFile } from '../../api'
+import { adminListFiles, adminDeleteFile, uploadFile, adminListUsers } from '../../api'
+import { useUserStore } from '../../store/user'
 
+const userStore = useUserStore()
+const users = ref([])
+const filterUser = ref(null)
 const files = ref([])
 const total = ref(0)
 const page = ref(1)
@@ -83,12 +107,21 @@ const imageIndex = (f) =>
 const load = async () => {
   loading.value = true
   try {
-    const data = await adminListFiles({ page: page.value, size: size.value })
+    const data = await adminListFiles({
+      page: page.value,
+      size: size.value,
+      username: filterUser.value || undefined
+    })
     files.value = data.records
     total.value = data.total
   } finally {
     loading.value = false
   }
+}
+
+const reload = () => {
+  page.value = 1
+  load()
 }
 
 const doUpload = async ({ file, onSuccess, onError }) => {
@@ -138,7 +171,12 @@ const remove = async (f) => {
   load()
 }
 
-onMounted(load)
+onMounted(() => {
+  if (userStore.isAdmin) {
+    adminListUsers().then((list) => (users.value = list)).catch(() => {})
+  }
+  load()
+})
 </script>
 
 <style scoped>
@@ -185,6 +223,10 @@ onMounted(load)
 .media-size {
   font-size: 12px;
   color: #909399;
+}
+
+.media-owner {
+  color: #3a7afe;
 }
 
 .media-actions {

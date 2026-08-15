@@ -62,11 +62,13 @@ public class MurmurService {
         return toVOList(ordered);
     }
 
-    /** 我的/全部说说（普通用户仅自己的，管理员全部） */
-    public PageResult<MurmurVO> listAdmin(Long operatorId, boolean isAdmin, int page, int size) {
+    /** 我的/全部说说（普通用户仅自己的，管理员可选按作者筛选） */
+    public PageResult<MurmurVO> listAdmin(Long operatorId, boolean isAdmin, int page, int size, Long authorId) {
         QueryWrapper<Murmur> qw = new QueryWrapper<>();
         if (!isAdmin) {
             qw.eq("user_id", operatorId);
+        } else if (authorId != null) {
+            qw.eq("user_id", authorId);
         }
         qw.orderByDesc("id");
         Page<Murmur> result = murmurMapper.selectPage(new Page<>(page, size), qw);

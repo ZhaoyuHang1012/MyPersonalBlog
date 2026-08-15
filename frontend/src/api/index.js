@@ -74,6 +74,9 @@ export const adminDeleteAlbum = (id) => http.delete(`/admin/albums/${id}`)
 export const adminAddAlbumPhoto = (groupId, data) => http.post(`/admin/albums/${groupId}/photos`, data)
 export const adminDeleteAlbumPhoto = (photoId) => http.delete(`/admin/albums/photos/${photoId}`)
 
+// ---- 用户管理（管理员） ----
+export const adminListUsers = () => http.get('/admin/users')
+
 // ---- 统计 / 日志 ----
 export const getStats = () => http.get('/admin/stats')
 export const adminListLogs = (params) => http.get('/admin/logs', { params })

@@ -26,9 +26,12 @@ public class FileController {
 
     @GetMapping
     public Result<PageResult<UploadFileVO>> list(@RequestParam(defaultValue = "1") int page,
-                                                 @RequestParam(defaultValue = "24") int size) {
+                                                 @RequestParam(defaultValue = "24") int size,
+                                                 @RequestParam(required = false) String username) {
         boolean all = SecurityUtil.isAdmin();
-        return Result.ok(fileService.list(SecurityUtil.currentUserId(), page, size, all));
+        // 普通用户忽略 username 参数，仅能查看自己的
+        return Result.ok(fileService.list(SecurityUtil.currentUserId(), page, size, all,
+                all ? username : null));
     }
 
     /** 存储空间用量 */

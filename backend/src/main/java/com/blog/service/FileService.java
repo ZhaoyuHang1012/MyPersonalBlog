@@ -138,12 +138,19 @@ public class FileService {
     }
 
     /**
-     * 媒体库列表（管理员 all=true 查看全部，普通用户仅自己的）
+     * 媒体库列表（管理员 all=true 查看全部，可指定用户名筛选；普通用户仅自己的）
      */
-    public PageResult<UploadFileVO> list(Long userId, int page, int size, boolean all) {
+    public PageResult<UploadFileVO> list(Long userId, int page, int size, boolean all, String username) {
         List<UploadFileVO> list = new ArrayList<>();
-        Path scanRoot = all ? baseDir() : userDir(userId);
-        if (!Files.exists(scanRoot)) {
+        Path scanRoot;
+        if (all) {
+            scanRoot = (username != null && !username.isBlank())
+                    ? baseDir().resolve(username).normalize()
+                    : baseDir();
+        } else {
+            scanRoot = userDir(userId);
+        }
+        if (!scanRoot.startsWith(baseDir()) || !Files.exists(scanRoot)) {
             return new PageResult<>(list, 0, page, size);
         }
         try (Stream<Path> stream = Files.walk(scanRoot)) {
