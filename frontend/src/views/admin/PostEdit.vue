@@ -49,6 +49,12 @@
           style="margin-left: 24px"
         >置顶</el-checkbox>
       </el-form-item>
+      <el-form-item label="可见性">
+        <el-radio-group v-model="form.visibility">
+          <el-radio :value="1">开放（大厅和个人主页可见）</el-radio>
+          <el-radio :value="0">仅自己可见</el-radio>
+        </el-radio-group>
+      </el-form-item>
       <el-form-item label="内容">
         <MdEditor
           v-model="form.contentMd"
@@ -93,6 +99,7 @@ const form = ref({
   categoryId: null,
   tagIds: [],
   status: 0,
+  visibility: 1,
   isTop: 0
 })
 const categories = ref([])
@@ -124,6 +131,7 @@ const loadPost = async () => {
       categoryId: p.categoryId,
       tagIds: (p.tags || []).map((t) => t.id),
       status: p.status,
+      visibility: p.visibility ?? 1,
       isTop: p.isTop
     }
   } finally {

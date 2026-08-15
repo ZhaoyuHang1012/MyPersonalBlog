@@ -19,6 +19,9 @@
           </h2>
           <p class="summary">{{ p.summary || '（暂无摘要）' }}</p>
           <div class="meta">
+            <span v-if="p.author" class="author-link" @click="$router.push(`/u/${p.author.username}`)">
+              ✍️ {{ p.author.nickname }}
+            </span>
             <span>{{ formatDate(p.publishedAt) }}</span>
             <span v-if="p.categoryName" class="cat" @click="filterByCategory(p.categoryId)">
               {{ p.categoryName }}
@@ -73,8 +76,8 @@
         </div>
         <div class="side-card about-me">
           <h3>关于</h3>
-          <p>欢迎来到这个博客，这里记录了 {{ site.author }} 的技术与生活。</p>
-          <router-link to="/about">了解更多 →</router-link>
+          <p>这是一个多用户博客平台，欢迎浏览大家分享的文章。</p>
+          <router-link to="/register">注册入驻 →</router-link>
         </div>
       </aside>
     </main>

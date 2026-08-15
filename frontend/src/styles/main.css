@@ -219,6 +219,38 @@ a {
   cursor: pointer;
 }
 
+.meta .author-link {
+  color: var(--accent);
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.meta .author-link:hover {
+  text-decoration: underline;
+}
+
+/* 个人博客页作者卡片 */
+.user-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  background: var(--card-bg);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 22px 24px;
+  margin-bottom: 16px;
+}
+
+.user-card-info h2 {
+  font-size: 22px;
+}
+
+.user-card-info p {
+  color: var(--text-secondary);
+  font-size: 13px;
+  margin-top: 6px;
+}
+
 .meta .cat:hover,
 .meta .tag:hover {
   background: var(--accent-light);

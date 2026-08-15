@@ -2,7 +2,13 @@ import http from './http'
 
 // ---- 认证 ----
 export const login = (data) => http.post('/auth/login', data)
+export const register = (data) => http.post('/auth/register', data)
 export const getMe = () => http.get('/auth/me')
+
+// ---- 用户 / 大厅 ----
+export const getUserInfo = (username) => http.get(`/users/${username}`)
+export const getUserPosts = (username, params) => http.get(`/users/${username}/posts`, { params })
+export const getHall = (params) => http.get('/hall', { params })
 
 // ---- 前台 ----
 export const getSite = () => http.get('/site')
@@ -54,6 +60,11 @@ export const uploadFile = (file) => {
 }
 export const adminListFiles = (params) => http.get('/admin/files', { params })
 export const adminDeleteFile = (name) => http.delete('/admin/files', { params: { name } })
+export const getFilesUsage = () => http.get('/admin/files/usage')
+
+// ---- 邀请码（管理员） ----
+export const adminListInvites = () => http.get('/admin/invites')
+export const adminGenerateInvites = (count) => http.post('/admin/invites', null, { params: { count } })
 
 // ---- 个人资料 / 密码 ----
 export const updateProfile = (data) => http.put('/admin/profile', data)

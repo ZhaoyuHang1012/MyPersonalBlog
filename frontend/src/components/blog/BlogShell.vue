@@ -7,13 +7,14 @@
           <p>{{ site.subtitle }}</p>
         </div>
         <nav class="site-nav">
-          <router-link to="/">首页</router-link>
+          <router-link to="/">大厅</router-link>
           <router-link to="/archive">归档</router-link>
           <router-link to="/links">友链</router-link>
           <router-link to="/murmur">说说</router-link>
           <router-link to="/album">相册</router-link>
           <router-link to="/about">关于</router-link>
-          <router-link v-if="isAdmin" to="/admin">管理</router-link>
+          <router-link v-if="isLoggedIn" to="/admin">我的主页</router-link>
+          <router-link v-else to="/register">注册</router-link>
           <a class="theme-toggle" :title="isDark ? '切换到白天模式' : '切换到黑夜模式'" @click="toggleTheme">
             {{ isDark ? '☀️' : '🌙' }}
           </a>
@@ -42,7 +43,7 @@ import { useUserStore } from '../../store/user'
 
 const userStore = useUserStore()
 const site = ref({ title: '我的博客', subtitle: '', author: '', announcement: '', footer: '', icp: '' })
-const isAdmin = computed(() => !!userStore.token)
+const isLoggedIn = computed(() => !!userStore.token)
 const year = new Date().getFullYear()
 const isDark = ref(document.documentElement.getAttribute('data-theme') === 'dark')
 

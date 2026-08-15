@@ -8,6 +8,8 @@ const routes = [
   { path: '/links', component: () => import('../views/blog/Links.vue') },
   { path: '/murmur', component: () => import('../views/blog/Murmur.vue') },
   { path: '/album', component: () => import('../views/blog/Album.vue') },
+  { path: '/u/:username', component: () => import('../views/blog/UserBlog.vue') },
+  { path: '/register', component: () => import('../views/auth/Register.vue') },
   { path: '/admin/login', component: () => import('../views/admin/Login.vue') },
   {
     path: '/admin',
@@ -26,6 +28,7 @@ const routes = [
       { path: 'media', component: () => import('../views/admin/MediaLibrary.vue') },
       { path: 'links', component: () => import('../views/admin/LinkManage.vue') },
       { path: 'murmurs', component: () => import('../views/admin/MurmurManage.vue') },
+      { path: 'invites', component: () => import('../views/admin/InviteManage.vue') },
       { path: 'logs', component: () => import('../views/admin/OperationLogs.vue') },
       { path: 'profile', component: () => import('../views/admin/Profile.vue') }
     ]

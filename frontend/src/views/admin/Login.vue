@@ -20,7 +20,10 @@
           </el-button>
         </el-form-item>
       </el-form>
-      <p class="tip">默认账号：admin / admin123</p>
+      <p class="tip">
+        默认账号：admin / admin123 ·
+        <router-link to="/register">没有账号？注册</router-link>
+      </p>
     </div>
   </div>
 </template>
@@ -47,7 +50,8 @@ const onSubmit = async () => {
   try {
     await userStore.login(form.username, form.password)
     ElMessage.success('登录成功')
-    router.push(route.query.redirect || '/admin')
+    // 管理员进管理后台，普通用户进个人中心；有回跳地址则优先回跳
+    router.push(route.query.redirect || (userStore.isAdmin ? '/admin' : '/admin/posts'))
   } catch (e) {
     /* 错误已由拦截器提示 */
   } finally {
