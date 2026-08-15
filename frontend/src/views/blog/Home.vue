@@ -14,9 +14,14 @@
             <button @click="search">搜索</button>
           </div>
 
-          <div v-if="activeCategory || activeTag" class="filter-tip">
-            <span>当前筛选：{{ activeCategory ? '分类' : '标签' }}「{{ currentFilterName }}」</span>
-            <a @click="resetFilter">清除筛选</a>
+          <div v-if="activeCategory || activeTags.length" class="filter-tip">
+            <span>
+              当前筛选：{{ activeCategory ? '分类「' + currentFilterName + '」' : '' }}
+              {{ activeCategory && activeTags.length ? ' + ' : '' }}
+              {{ activeTags.length ? '标签「' + activeTagNames + '」' : '' }}
+              （点击已选标签可取消）
+            </span>
+            <a @click="resetFilter">清除全部筛选</a>
           </div>
 
           <article v-for="p in posts" :key="p.id" class="post-card">
@@ -33,9 +38,10 @@
               <span v-if="p.categoryName" class="cat" @click="filterByCategory(p.categoryId)">
                 {{ p.categoryName }}
               </span>
-              <span v-for="t in p.tags" :key="t.id" class="tag" @click="filterByTag(t.id)">
+              <span v-for="t in p.tags" :key="t.id" class="tag" @click="toggleTag(t.id)">
                 # {{ t.name }}
               </span>
+              <ArchiveButton :target-type="'post'" :target-id="p.id" />
               <span class="views">👁 {{ p.viewCount }} 阅读</span>
               <span class="views">💬 {{ p.commentCount }} 评论</span>
             </div>
@@ -80,8 +86,8 @@
             <span
               v-for="t in tags"
               :key="t.id"
-              :class="{ active: activeTag === t.id }"
-              @click="filterByTag(t.id)"
+              :class="{ active: activeTags.includes(t.id) }"
+              @click="toggleTag(t.id)"
             >{{ t.name }}</span>
           </div>
         </div>
@@ -101,6 +107,7 @@ import dayjs from 'dayjs'
 import BlogShell from '../../components/blog/BlogShell.vue'
 import MurmurStream from '../../components/blog/MurmurStream.vue'
 import AlbumGrid from '../../components/blog/AlbumGrid.vue'
+import ArchiveButton from '../../components/common/ArchiveButton.vue'
 import { getPosts, getCategories, getTags, getSite } from '../../api'
 
 const site = ref({ title: '我的博客', author: '博主' })
@@ -112,17 +119,17 @@ const size = ref(10)
 const categories = ref([])
 const tags = ref([])
 const activeCategory = ref(null)
-const activeTag = ref(null)
+const activeTags = ref([])
 const keyword = ref('')
 
 const currentFilterName = computed(() => {
-  if (activeCategory.value) {
-    const c = categories.value.find((i) => i.id === activeCategory.value)
-    return c ? c.name : ''
-  }
-  const t = tags.value.find((i) => i.id === activeTag.value)
-  return t ? t.name : ''
+  const c = categories.value.find((i) => i.id === activeCategory.value)
+  return c ? c.name : ''
 })
+
+const activeTagNames = computed(() =>
+  activeTags.value.map((id) => tags.value.find((t) => t.id === id)?.name || '').join('、')
+)
 
 const formatDate = (d) => (d ? dayjs(d).format('YYYY-MM-DD') : '')
 
@@ -131,7 +138,7 @@ const loadPosts = async () => {
     page: page.value,
     size: size.value,
     categoryId: activeCategory.value || undefined,
-    tagId: activeTag.value || undefined,
+    tagIds: activeTags.value.length ? activeTags.value.join(',') : undefined,
     keyword: keyword.value || undefined
   })
   posts.value = data.records
@@ -144,15 +151,19 @@ const switchTab = (name) => {
 
 const filterByCategory = (id) => {
   activeCategory.value = id
-  activeTag.value = null
   page.value = 1
   tab.value = 'post'
   loadPosts()
 }
 
-const filterByTag = (id) => {
-  activeTag.value = id
-  activeCategory.value = null
+// 标签多选：再次点击已选中的标签可取消
+const toggleTag = (id) => {
+  const idx = activeTags.value.indexOf(id)
+  if (idx >= 0) {
+    activeTags.value.splice(idx, 1)
+  } else {
+    activeTags.value.push(id)
+  }
   page.value = 1
   tab.value = 'post'
   loadPosts()
@@ -160,7 +171,7 @@ const filterByTag = (id) => {
 
 const resetFilter = () => {
   activeCategory.value = null
-  activeTag.value = null
+  activeTags.value = []
   page.value = 1
   loadPosts()
 }

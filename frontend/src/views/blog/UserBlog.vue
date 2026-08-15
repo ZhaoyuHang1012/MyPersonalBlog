@@ -11,6 +11,16 @@
             <h2>{{ profile.nickname }}</h2>
             <p>@{{ profile.username }} · {{ profile.postCount }} 篇公开文章</p>
           </div>
+          <div class="user-card-actions" v-if="canOperate">
+            <el-button v-if="relation === 'none'" type="primary" size="small" @click="sendRequest">
+              ➕ 加好友
+            </el-button>
+            <el-button v-else-if="relation === 'requested'" size="small" disabled>已申请，等待处理</el-button>
+            <el-button v-else-if="relation === 'friend'" size="small" disabled>✓ 已是好友</el-button>
+            <el-button v-else-if="relation === 'pending'" type="warning" size="small" @click="router.push('/me/friends')">
+              TA 申请加你为好友 →
+            </el-button>
+          </div>
         </div>
 
         <article v-for="p in posts" :key="p.id" class="post-card">
@@ -54,20 +64,36 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, computed, watch, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import dayjs from 'dayjs'
+import { ElMessage } from 'element-plus'
 import BlogShell from '../../components/blog/BlogShell.vue'
-import { getUserInfo, getUserPosts } from '../../api'
+import { getUserInfo, getUserPosts, getFriendRelation, sendFriendRequest } from '../../api'
+import { useUserStore } from '../../store/user'
 
 const route = useRoute()
+const router = useRouter()
+const userStore = useUserStore()
 const profile = ref(null)
 const posts = ref([])
 const total = ref(0)
 const page = ref(1)
 const size = ref(10)
+const relation = ref('none')
+
+// 登录且非本人时显示好友操作
+const canOperate = computed(() =>
+  !!userStore.token && profile.value && userStore.user?.id !== profile.value.id
+)
 
 const formatDate = (d) => (d ? dayjs(d).format('YYYY-MM-DD') : '')
+
+const sendRequest = async () => {
+  await sendFriendRequest({ toUserId: profile.value.id, message: '' })
+  ElMessage.success('好友申请已发送')
+  relation.value = 'requested'
+}
 
 const load = async () => {
   try {
@@ -76,6 +102,10 @@ const load = async () => {
     posts.value = data.records
     total.value = data.total
     document.title = `${profile.value.nickname} 的博客`
+    if (canOperate.value) {
+      const rel = await getFriendRelation(profile.value.id)
+      relation.value = rel.relation
+    }
   } catch (e) {
     /* 拦截器已提示 */
   }

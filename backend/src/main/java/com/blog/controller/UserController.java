@@ -40,6 +40,7 @@ public class UserController {
         long postCount = postMapper.selectCount(new QueryWrapper<Post>()
                 .eq("user_id", user.getId()).eq("status", 1).eq("visibility", 1));
         return Result.ok(Map.of(
+                "id", user.getId(),
                 "username", user.getUsername(),
                 "nickname", user.getNickname(),
                 "avatar", user.getAvatar() == null ? "" : user.getAvatar(),

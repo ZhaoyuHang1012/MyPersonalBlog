@@ -23,6 +23,8 @@ const routes = [
       { path: 'posts/:id/edit', component: () => import('../views/admin/PostEdit.vue') },
       { path: 'murmurs', component: () => import('../views/me/MurmurManage.vue') },
       { path: 'albums', component: () => import('../views/me/AlbumManage.vue') },
+      { path: 'friends', component: () => import('../views/me/Friends.vue') },
+      { path: 'archives', component: () => import('../views/me/Archives.vue') },
       { path: 'media', component: () => import('../views/admin/MediaLibrary.vue') },
       { path: 'settings', component: () => import('../views/admin/Profile.vue') }
     ]

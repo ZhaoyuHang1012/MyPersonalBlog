@@ -31,6 +31,25 @@
     </div>
     <el-empty v-else description="还没有相册，创建一个吧" />
 
+    <!-- 相册编辑弹窗（名称 + 权限） -->
+    <el-dialog v-model="editVisible" title="编辑相册" width="420px">
+      <el-form label-width="70px">
+        <el-form-item label="名称">
+          <el-input v-model="editForm.name" maxlength="50" />
+        </el-form-item>
+        <el-form-item label="权限">
+          <el-radio-group v-model="editForm.visibility">
+            <el-radio :value="1">公开</el-radio>
+            <el-radio :value="0">仅自己可见</el-radio>
+          </el-radio-group>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="editVisible = false">取消</el-button>
+        <el-button type="primary" @click="saveEdit">保存</el-button>
+      </template>
+    </el-dialog>
+
     <!-- 相册照片管理弹窗 -->
     <el-dialog v-model="dialogVisible" :title="`管理相册：${currentGroup?.name || ''}`" width="720px">
       <div class="album-manage-upload">
@@ -80,6 +99,8 @@ const creating = ref(false)
 const dialogVisible = ref(false)
 const currentGroup = ref(null)
 const photos = ref([])
+const editVisible = ref(false)
+const editForm = ref({ id: null, name: '', visibility: 1 })
 
 const load = async () => {
   groups.value = await adminListAlbums()
@@ -104,21 +125,22 @@ const create = async () => {
   }
 }
 
-const rename = async (g) => {
-  let value
-  try {
-    const r = await ElMessageBox.prompt('输入新的相册名称', '重命名', {
-      inputValue: g.name,
-      confirmButtonText: '确定',
-      cancelButtonText: '取消'
-    })
-    value = r.value
-  } catch (e) {
+const rename = (g) => {
+  editForm.value = { id: g.id, name: g.name, visibility: g.visibility }
+  editVisible.value = true
+}
+
+const saveEdit = async () => {
+  if (!editForm.value.name.trim()) {
+    ElMessage.warning('请输入相册名称')
     return
   }
-  if (!value.trim()) return
-  await adminUpdateAlbum(g.id, { name: value.trim(), visibility: g.visibility })
-  ElMessage.success('已重命名')
+  await adminUpdateAlbum(editForm.value.id, {
+    name: editForm.value.name.trim(),
+    visibility: editForm.value.visibility
+  })
+  ElMessage.success('已保存')
+  editVisible.value = false
   load()
 }
 

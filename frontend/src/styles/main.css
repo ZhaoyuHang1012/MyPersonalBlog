@@ -251,6 +251,10 @@ a {
   margin-top: 6px;
 }
 
+.user-card-actions {
+  margin-left: auto;
+}
+
 .meta .cat:hover,
 .meta .tag:hover {
   background: var(--accent-light);

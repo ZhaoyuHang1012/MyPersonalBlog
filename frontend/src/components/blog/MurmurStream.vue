@@ -11,6 +11,7 @@
           </router-link>
           <div class="murmur-time">{{ formatDate(m.createdAt) }}</div>
         </div>
+        <ArchiveButton :target-type="'murmur'" :target-id="m.id" style="margin-left: auto" />
       </div>
       <div class="murmur-content-text">{{ m.content }}</div>
       <div v-if="m.images && m.images.length" class="murmur-images" :class="'count-' + Math.min(m.images.length, 9)">
@@ -46,6 +47,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import dayjs from 'dayjs'
+import ArchiveButton from '../common/ArchiveButton.vue'
 import { getMurmurs } from '../../api'
 
 const murmurs = ref([])

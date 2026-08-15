@@ -6,6 +6,8 @@
         <router-link to="/me/posts" :class="{ active: isActive('posts') }">我的文章</router-link>
         <router-link to="/me/murmurs" :class="{ active: isActive('murmurs') }">我的说说</router-link>
         <router-link to="/me/albums" :class="{ active: isActive('albums') }">我的相册</router-link>
+        <router-link to="/me/friends" :class="{ active: isActive('friends') }">我的好友</router-link>
+        <router-link to="/me/archives" :class="{ active: isActive('archives') }">我的归档</router-link>
         <router-link to="/me/media" :class="{ active: isActive('media') }">我的媒体</router-link>
         <router-link to="/me/settings" :class="{ active: isActive('settings') }">个人设置</router-link>
       </div>

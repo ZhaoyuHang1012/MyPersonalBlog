@@ -27,10 +27,29 @@ export const adminUpdateLink = (id, data) => http.put(`/admin/links/${id}`, data
 export const adminApproveLink = (id) => http.put(`/admin/links/${id}/approve`)
 export const adminDeleteLink = (id) => http.delete(`/admin/links/${id}`)
 
+// ---- 好友 ----
+export const getFriends = () => http.get('/friends')
+export const getFriendRequests = () => http.get('/friends/requests')
+export const getSentRequests = () => http.get('/friends/requests/sent')
+export const sendFriendRequest = (data) => http.post('/friends/requests', data)
+export const approveFriendRequest = (id) => http.put(`/friends/requests/${id}/approve`)
+export const rejectFriendRequest = (id) => http.put(`/friends/requests/${id}/reject`)
+export const removeFriend = (friendId) => http.delete(`/friends/${friendId}`)
+export const getFriendRelation = (targetUserId) => http.get(`/friends/relation/${targetUserId}`)
+
+// ---- 归档收藏 ----
+export const getArchives = (type) => http.get('/archives', { params: { type } })
+export const getArchiveStatus = (targetType, targetId) =>
+  http.get('/archives/status', { params: { targetType, targetId } })
+export const addArchive = (data) => http.post('/archives', data)
+export const removeArchive = (targetType, targetId) =>
+  http.delete('/archives', { params: { targetType, targetId } })
+
 // ---- 说说 ----
 export const getMurmurs = (params) => http.get('/murmurs', { params })
 export const adminListMurmurs = (params) => http.get('/admin/murmurs', { params })
 export const adminCreateMurmur = (data) => http.post('/admin/murmurs', data)
+export const adminUpdateMurmur = (id, data) => http.put(`/admin/murmurs/${id}`, data)
 export const adminDeleteMurmur = (id) => http.delete(`/admin/murmurs/${id}`)
 
 // ---- 相册（相册组 + 照片/视频） ----

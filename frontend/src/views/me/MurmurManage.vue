@@ -38,6 +38,7 @@
       <div class="murmur-item-head">
         <span class="murmur-item-time">{{ formatDate(m.createdAt) }}</span>
         <el-tag v-if="m.visibility === 0" size="small" type="info">仅自己可见</el-tag>
+        <el-button link type="primary" size="small" @click="openEdit(m)">编辑</el-button>
         <el-button link type="danger" size="small" @click="remove(m)">删除</el-button>
       </div>
       <div class="murmur-item-content">{{ m.content }}</div>
@@ -67,6 +68,23 @@
         @current-change="load"
       />
     </div>
+
+    <!-- 编辑弹窗 -->
+    <el-dialog v-model="editVisible" title="编辑说说" width="480px">
+      <el-input v-model="editForm.content" type="textarea" :rows="4" maxlength="2000" show-word-limit />
+      <div class="edit-visibility">
+        <span>可见性：</span>
+        <el-radio-group v-model="editForm.visibility">
+          <el-radio :value="1">公开</el-radio>
+          <el-radio :value="0">仅自己可见</el-radio>
+        </el-radio-group>
+      </div>
+      <p class="edit-tip">配图不可在此修改，如需调整请删除后重新发布</p>
+      <template #footer>
+        <el-button @click="editVisible = false">取消</el-button>
+        <el-button type="primary" :loading="saving" @click="saveEdit">保存</el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
@@ -74,7 +92,7 @@
 import { ref, onMounted } from 'vue'
 import dayjs from 'dayjs'
 import { ElMessage, ElMessageBox } from 'element-plus'
-import { adminListMurmurs, adminCreateMurmur, adminDeleteMurmur, uploadFile } from '../../api'
+import { adminListMurmurs, adminCreateMurmur, adminUpdateMurmur, adminDeleteMurmur, uploadFile } from '../../api'
 
 const content = ref('')
 const pickedImages = ref([])
@@ -84,6 +102,36 @@ const murmurs = ref([])
 const total = ref(0)
 const page = ref(1)
 const size = ref(10)
+const editVisible = ref(false)
+const saving = ref(false)
+const editForm = ref({ id: null, content: '', visibility: 1 })
+
+const openEdit = (m) => {
+  editForm.value = { id: m.id, content: m.content, visibility: m.visibility, images: m.images || [] }
+  editVisible.value = true
+}
+
+const saveEdit = async () => {
+  if (!editForm.value.content.trim()) {
+    ElMessage.warning('内容不能为空')
+    return
+  }
+  saving.value = true
+  try {
+    await adminUpdateMurmur(editForm.value.id, {
+      content: editForm.value.content.trim(),
+      visibility: editForm.value.visibility,
+      images: editForm.value.images
+    })
+    ElMessage.success('已保存')
+    editVisible.value = false
+    load()
+  } catch (e) {
+    /* 拦截器已提示 */
+  } finally {
+    saving.value = false
+  }
+}
 
 const formatDate = (d) => (d ? dayjs(d).format('YYYY-MM-DD HH:mm') : '')
 
@@ -145,3 +193,18 @@ const remove = async (m) => {
 
 onMounted(load)
 </script>
+
+<style scoped>
+.edit-visibility {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.edit-tip {
+  font-size: 12px;
+  color: #909399;
+  margin-top: 10px;
+}
+</style>
