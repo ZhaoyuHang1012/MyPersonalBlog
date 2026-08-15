@@ -8,6 +8,7 @@ const routes = [
   { path: '/links', component: () => import('../views/blog/Links.vue') },
   { path: '/murmur', component: () => import('../views/blog/Murmur.vue') },
   { path: '/album', component: () => import('../views/blog/Album.vue') },
+  { path: '/album/:id', component: () => import('../views/blog/AlbumDetail.vue') },
   { path: '/u/:username', component: () => import('../views/blog/UserBlog.vue') },
   { path: '/register', component: () => import('../views/auth/Register.vue') },
   // 个人中心（前台风格，登录用户管理自己的博客）
@@ -20,6 +21,8 @@ const routes = [
       { path: 'posts', component: () => import('../views/admin/PostList.vue') },
       { path: 'posts/new', component: () => import('../views/admin/PostEdit.vue') },
       { path: 'posts/:id/edit', component: () => import('../views/admin/PostEdit.vue') },
+      { path: 'murmurs', component: () => import('../views/me/MurmurManage.vue') },
+      { path: 'albums', component: () => import('../views/me/AlbumManage.vue') },
       { path: 'media', component: () => import('../views/admin/MediaLibrary.vue') },
       { path: 'settings', component: () => import('../views/admin/Profile.vue') }
     ]

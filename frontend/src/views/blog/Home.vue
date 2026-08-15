@@ -2,50 +2,61 @@
   <BlogShell>
     <main class="blog-main">
       <div class="content">
-        <div class="search-bar">
-          <input v-model="keyword" placeholder="搜索文章（标题或正文）…" @keyup.enter="search" />
-          <button @click="search">搜索</button>
+        <div class="hall-tabs">
+          <span :class="{ active: tab === 'post' }" @click="switchTab('post')">📄 文章</span>
+          <span :class="{ active: tab === 'murmur' }" @click="switchTab('murmur')">💭 说说</span>
+          <span :class="{ active: tab === 'album' }" @click="switchTab('album')">📷 相册</span>
         </div>
 
-        <div v-if="activeCategory || activeTag" class="filter-tip">
-          <span>当前筛选：{{ activeCategory ? '分类' : '标签' }}「{{ currentFilterName }}」</span>
-          <a @click="resetFilter">清除筛选</a>
-        </div>
-
-        <article v-for="p in posts" :key="p.id" class="post-card">
-          <h2>
-            <span v-if="p.isTop === 1" class="top-badge">置顶</span>
-            <router-link :to="`/post/${p.id}`">{{ p.title }}</router-link>
-          </h2>
-          <p class="summary">{{ p.summary || '（暂无摘要）' }}</p>
-          <div class="meta">
-            <span v-if="p.author" class="author-link" @click="$router.push(`/u/${p.author.username}`)">
-              ✍️ {{ p.author.nickname }}
-            </span>
-            <span>{{ formatDate(p.publishedAt) }}</span>
-            <span v-if="p.categoryName" class="cat" @click="filterByCategory(p.categoryId)">
-              {{ p.categoryName }}
-            </span>
-            <span v-for="t in p.tags" :key="t.id" class="tag" @click="filterByTag(t.id)">
-              # {{ t.name }}
-            </span>
-            <span class="views">👁 {{ p.viewCount }} 阅读</span>
-            <span class="views">💬 {{ p.commentCount }} 评论</span>
+        <template v-if="tab === 'post'">
+          <div class="search-bar">
+            <input v-model="keyword" placeholder="搜索文章（标题或正文）…" @keyup.enter="search" />
+            <button @click="search">搜索</button>
           </div>
-        </article>
 
-        <div v-if="!posts.length" class="empty">暂无文章</div>
+          <div v-if="activeCategory || activeTag" class="filter-tip">
+            <span>当前筛选：{{ activeCategory ? '分类' : '标签' }}「{{ currentFilterName }}」</span>
+            <a @click="resetFilter">清除筛选</a>
+          </div>
 
-        <div v-if="total > size" class="pager">
-          <el-pagination
-            background
-            layout="prev, pager, next"
-            :total="total"
-            :page-size="size"
-            v-model:current-page="page"
-            @current-change="loadPosts"
-          />
-        </div>
+          <article v-for="p in posts" :key="p.id" class="post-card">
+            <h2>
+              <span v-if="p.isTop === 1" class="top-badge">置顶</span>
+              <router-link :to="`/post/${p.id}`">{{ p.title }}</router-link>
+            </h2>
+            <p class="summary">{{ p.summary || '（暂无摘要）' }}</p>
+            <div class="meta">
+              <span v-if="p.author" class="author-link" @click="$router.push(`/u/${p.author.username}`)">
+                ✍️ {{ p.author.nickname }}
+              </span>
+              <span>{{ formatDate(p.publishedAt) }}</span>
+              <span v-if="p.categoryName" class="cat" @click="filterByCategory(p.categoryId)">
+                {{ p.categoryName }}
+              </span>
+              <span v-for="t in p.tags" :key="t.id" class="tag" @click="filterByTag(t.id)">
+                # {{ t.name }}
+              </span>
+              <span class="views">👁 {{ p.viewCount }} 阅读</span>
+              <span class="views">💬 {{ p.commentCount }} 评论</span>
+            </div>
+          </article>
+
+          <div v-if="!posts.length" class="empty">暂无文章</div>
+
+          <div v-if="total > size" class="pager">
+            <el-pagination
+              background
+              layout="prev, pager, next"
+              :total="total"
+              :page-size="size"
+              v-model:current-page="page"
+              @current-change="loadPosts"
+            />
+          </div>
+        </template>
+
+        <MurmurStream v-else-if="tab === 'murmur'" />
+        <AlbumGrid v-else />
       </div>
 
       <aside class="sidebar">
@@ -88,9 +99,12 @@
 import { ref, computed, onMounted } from 'vue'
 import dayjs from 'dayjs'
 import BlogShell from '../../components/blog/BlogShell.vue'
+import MurmurStream from '../../components/blog/MurmurStream.vue'
+import AlbumGrid from '../../components/blog/AlbumGrid.vue'
 import { getPosts, getCategories, getTags, getSite } from '../../api'
 
 const site = ref({ title: '我的博客', author: '博主' })
+const tab = ref('post')
 const posts = ref([])
 const total = ref(0)
 const page = ref(1)
@@ -124,10 +138,15 @@ const loadPosts = async () => {
   total.value = data.total
 }
 
+const switchTab = (name) => {
+  tab.value = name
+}
+
 const filterByCategory = (id) => {
   activeCategory.value = id
   activeTag.value = null
   page.value = 1
+  tab.value = 'post'
   loadPosts()
 }
 
@@ -135,6 +154,7 @@ const filterByTag = (id) => {
   activeTag.value = id
   activeCategory.value = null
   page.value = 1
+  tab.value = 'post'
   loadPosts()
 }
 

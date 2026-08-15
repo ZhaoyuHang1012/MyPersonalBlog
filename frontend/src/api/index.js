@@ -28,13 +28,20 @@ export const adminApproveLink = (id) => http.put(`/admin/links/${id}/approve`)
 export const adminDeleteLink = (id) => http.delete(`/admin/links/${id}`)
 
 // ---- 说说 ----
-export const getMurmurs = () => http.get('/murmurs')
-export const adminListMurmurs = () => http.get('/admin/murmurs')
+export const getMurmurs = (params) => http.get('/murmurs', { params })
+export const adminListMurmurs = (params) => http.get('/admin/murmurs', { params })
 export const adminCreateMurmur = (data) => http.post('/admin/murmurs', data)
 export const adminDeleteMurmur = (id) => http.delete(`/admin/murmurs/${id}`)
 
-// ---- 相册（直接展示媒体库图片） ----
+// ---- 相册（相册组 + 照片/视频） ----
 export const getAlbums = () => http.get('/albums')
+export const getAlbumDetail = (id) => http.get(`/albums/${id}`)
+export const adminListAlbums = () => http.get('/admin/albums')
+export const adminCreateAlbum = (data) => http.post('/admin/albums', data)
+export const adminUpdateAlbum = (id, data) => http.put(`/admin/albums/${id}`, data)
+export const adminDeleteAlbum = (id) => http.delete(`/admin/albums/${id}`)
+export const adminAddAlbumPhoto = (groupId, data) => http.post(`/admin/albums/${groupId}/photos`, data)
+export const adminDeleteAlbumPhoto = (photoId) => http.delete(`/admin/albums/photos/${photoId}`)
 
 // ---- 统计 / 日志 ----
 export const getStats = () => http.get('/admin/stats')
