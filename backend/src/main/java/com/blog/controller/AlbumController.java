@@ -22,6 +22,7 @@ public class AlbumController {
 
     @GetMapping
     public Result<List<UploadFileVO>> list() {
-        return Result.ok(fileService.list(1, 1000).getRecords());
+        // 相册展示所有用户上传的图片（上传即入相册）
+        return Result.ok(fileService.list(null, 1, 1000, true).getRecords());
     }
 }

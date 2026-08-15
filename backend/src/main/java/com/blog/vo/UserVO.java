@@ -15,4 +15,10 @@ public class UserVO {
     private String nickname;
 
     private String avatar;
+
+    /** ADMIN / USER */
+    private String role;
+
+    /** 存储配额（字节） */
+    private Long quota;
 }

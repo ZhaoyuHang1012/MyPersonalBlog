@@ -51,6 +51,8 @@ public class DataInitializer implements ApplicationRunner {
         admin.setUsername("admin");
         admin.setPassword(passwordEncoder.encode("admin123"));
         admin.setNickname("博主");
+        admin.setRole("ADMIN");
+        admin.setQuota(1073741824L);
         admin.setCreatedAt(LocalDateTime.now());
         userMapper.insert(admin);
         log.info("已创建默认管理员账号：admin / admin123，请尽快修改密码");

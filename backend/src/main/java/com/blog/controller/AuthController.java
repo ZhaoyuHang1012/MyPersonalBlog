@@ -2,12 +2,13 @@ package com.blog.controller;
 
 import com.blog.common.Result;
 import com.blog.dto.LoginRequest;
+import com.blog.dto.RegisterRequest;
 import com.blog.service.AuthService;
+import com.blog.util.SecurityUtil;
 import com.blog.vo.LoginVO;
 import com.blog.vo.UserVO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -29,9 +30,13 @@ public class AuthController {
         return Result.ok(authService.login(request));
     }
 
+    @PostMapping("/register")
+    public Result<LoginVO> register(@Valid @RequestBody RegisterRequest request) {
+        return Result.ok(authService.register(request));
+    }
+
     @GetMapping("/me")
     public Result<UserVO> me() {
-        Long uid = (Long) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return Result.ok(authService.getUserById(uid));
+        return Result.ok(authService.getUserById(SecurityUtil.currentUserId()));
     }
 }

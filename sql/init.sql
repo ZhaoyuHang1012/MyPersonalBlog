@@ -7,13 +7,15 @@
 CREATE DATABASE IF NOT EXISTS blog DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 USE blog;
 
--- 用户表（管理员）
+-- 用户表（管理员/普通用户）
 CREATE TABLE IF NOT EXISTS users (
     id         BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
     username   VARCHAR(50)     NOT NULL COMMENT '登录名',
     password   VARCHAR(100)    NOT NULL COMMENT 'BCrypt 密码',
     nickname   VARCHAR(50)     NOT NULL COMMENT '昵称',
     avatar     VARCHAR(255)    DEFAULT NULL COMMENT '头像地址',
+    role       VARCHAR(20)     NOT NULL DEFAULT 'USER' COMMENT 'ADMIN 管理员 / USER 普通用户',
+    quota      BIGINT          NOT NULL DEFAULT 1073741824 COMMENT '存储配额（字节），默认 1GB',
     created_at DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
     PRIMARY KEY (id),
     UNIQUE KEY uk_username (username)
@@ -41,21 +43,26 @@ CREATE TABLE IF NOT EXISTS tags (
 -- 文章表
 CREATE TABLE IF NOT EXISTS posts (
     id           BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+    user_id      BIGINT UNSIGNED DEFAULT NULL COMMENT '作者 ID',
     title        VARCHAR(200)    NOT NULL COMMENT '标题',
     summary      VARCHAR(500)    DEFAULT NULL COMMENT '摘要',
     content_md   MEDIUMTEXT      NOT NULL COMMENT 'Markdown 原文',
     content_html MEDIUMTEXT      DEFAULT NULL COMMENT '渲染后的 HTML',
     category_id  BIGINT UNSIGNED DEFAULT NULL COMMENT '分类 ID',
     status       TINYINT         NOT NULL DEFAULT 0 COMMENT '0草稿 1已发布',
+    visibility   TINYINT         NOT NULL DEFAULT 1 COMMENT '0仅自己可见 1开放',
     is_top       TINYINT         NOT NULL DEFAULT 0 COMMENT '是否置顶',
     view_count   INT UNSIGNED    NOT NULL DEFAULT 0 COMMENT '浏览量',
+    comment_count INT UNSIGNED   NOT NULL DEFAULT 0 COMMENT '评论数',
     created_at   DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at   DATETIME        NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     published_at DATETIME        DEFAULT NULL COMMENT '发布时间',
     PRIMARY KEY (id),
     KEY idx_status_top (status, is_top),
     KEY idx_category (category_id),
-    KEY idx_created (created_at)
+    KEY idx_created (created_at),
+    KEY idx_user (user_id),
+    KEY idx_visibility (visibility)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT = '文章表';
 
 -- 文章-标签关联表

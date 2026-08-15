@@ -26,6 +26,9 @@ public class PostSaveRequest {
     /** 0 草稿 1 发布 */
     private Integer status;
 
+    /** 0 仅自己可见 1 开放（大厅/个人博客页可见） */
+    private Integer visibility;
+
     /** 0 否 1 置顶 */
     private Integer isTop;
 }

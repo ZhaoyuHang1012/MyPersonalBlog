@@ -7,18 +7,17 @@ import com.blog.util.SecurityUtil;
 import com.blog.vo.PostVO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * 前台文章接口（大厅语义：仅开放文章）
+ * 大厅接口：所有用户「开放」的文章流
  */
 @RestController
-@RequestMapping("/api/posts")
+@RequestMapping("/api/hall")
 @RequiredArgsConstructor
-public class PostController {
+public class HallController {
 
     private final PostService postService;
 
@@ -29,10 +28,5 @@ public class PostController {
                                            @RequestParam(required = false) Long tagId,
                                            @RequestParam(required = false) String keyword) {
         return Result.ok(postService.listHall(page, size, categoryId, tagId, keyword));
-    }
-
-    @GetMapping("/{id}")
-    public Result<PostVO> detail(@PathVariable Long id) {
-        return Result.ok(postService.getDetail(id, SecurityUtil.currentUserId()));
     }
 }

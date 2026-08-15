@@ -14,6 +14,11 @@ public class PostVO {
 
     private Long id;
 
+    private Long userId;
+
+    /** 作者信息 */
+    private AuthorVO author;
+
     private String title;
 
     private String summary;
@@ -29,6 +34,8 @@ public class PostVO {
     private String categoryName;
 
     private Integer status;
+
+    private Integer visibility;
 
     private Integer isTop;
 
@@ -55,5 +62,13 @@ public class PostVO {
     public static class LinkVO {
         private Long id;
         private String title;
+    }
+
+    @Data
+    public static class AuthorVO {
+        private Long id;
+        private String username;
+        private String nickname;
+        private String avatar;
     }
 }

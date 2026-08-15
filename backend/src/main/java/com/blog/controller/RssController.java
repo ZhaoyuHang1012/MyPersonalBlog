@@ -38,6 +38,7 @@ public class RssController {
         List<Post> posts = postMapper.selectList(new QueryWrapper<Post>()
                 .select("id", "title", "content_html", "published_at")
                 .eq("status", 1)
+                .eq("visibility", 1)
                 .orderByDesc("published_at")
                 .last("LIMIT 20"));
 

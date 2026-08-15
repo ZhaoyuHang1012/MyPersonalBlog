@@ -92,6 +92,10 @@ public class CommentService {
         if (user == null) {
             throw new BizException(401, "登录状态已失效，请重新登录");
         }
+        // 「仅自己可见」文章仅作者本人可评论
+        if (post.getVisibility() != 1 && !userId.equals(post.getUserId())) {
+            throw new BizException(403, "该文章仅作者可见，无法评论");
+        }
         if (request.getParentId() != null) {
             Comment parent = commentMapper.selectById(request.getParentId());
             if (parent == null || !parent.getPostId().equals(postId)) {

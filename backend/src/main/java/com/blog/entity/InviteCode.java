@@ -8,28 +8,23 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 用户（管理员）
+ * 邀请码
  */
 @Data
-@TableName("users")
-public class User {
+@TableName("invite_codes")
+public class InviteCode {
 
     @TableId(type = IdType.AUTO)
     private Long id;
 
-    private String username;
+    private String code;
 
-    private String password;
+    /** 0 未使用 1 已使用 */
+    private Integer used;
 
-    private String nickname;
+    private String usedBy;
 
-    private String avatar;
-
-    /** ADMIN 管理员 / USER 普通用户 */
-    private String role;
-
-    /** 存储配额（字节） */
-    private Long quota;
+    private LocalDateTime usedAt;
 
     private LocalDateTime createdAt;
 }

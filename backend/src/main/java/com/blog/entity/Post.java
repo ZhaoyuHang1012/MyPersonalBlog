@@ -17,6 +17,9 @@ public class Post {
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    /** 作者 ID */
+    private Long userId;
+
     private String title;
 
     private String summary;
@@ -29,6 +32,9 @@ public class Post {
 
     /** 0 草稿 1 已发布 */
     private Integer status;
+
+    /** 0 仅自己可见 1 开放 */
+    private Integer visibility;
 
     /** 0 否 1 置顶 */
     private Integer isTop;

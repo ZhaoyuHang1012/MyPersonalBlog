@@ -66,6 +66,8 @@ public class UserService {
         vo.setUsername(user.getUsername());
         vo.setNickname(user.getNickname());
         vo.setAvatar(user.getAvatar());
+        vo.setRole(user.getRole());
+        vo.setQuota(user.getQuota());
         return vo;
     }
 }
