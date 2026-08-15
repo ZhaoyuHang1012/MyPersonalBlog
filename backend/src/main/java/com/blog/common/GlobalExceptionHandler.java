@@ -18,6 +18,11 @@ public class GlobalExceptionHandler {
         return Result.fail(e.getCode(), e.getMessage());
     }
 
+    @ExceptionHandler(org.springframework.web.servlet.resource.NoResourceFoundException.class)
+    public Result<Void> handleNotFound(org.springframework.web.servlet.resource.NoResourceFoundException e) {
+        return Result.fail(404, "资源不存在");
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public Result<Void> handleValid(MethodArgumentNotValidException e) {
         FieldError fieldError = e.getBindingResult().getFieldError();
