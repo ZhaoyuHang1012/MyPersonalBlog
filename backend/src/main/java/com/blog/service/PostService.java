@@ -294,6 +294,7 @@ public class PostService {
             vo.setIsTop(p.getIsTop());
             vo.setViewCount(p.getViewCount());
             vo.setCommentCount(p.getCommentCount() == null ? 0L : p.getCommentCount());
+            vo.setLikeCount(p.getLikeCount() == null ? 0L : p.getLikeCount());
             vo.setCreatedAt(p.getCreatedAt());
             vo.setUpdatedAt(p.getUpdatedAt());
             vo.setPublishedAt(p.getPublishedAt());

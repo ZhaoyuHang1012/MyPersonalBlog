@@ -32,7 +32,12 @@
             <p class="summary">{{ p.summary || '（暂无摘要）' }}</p>
             <div class="meta">
               <span v-if="p.author" class="author-link" @click="$router.push(`/u/${p.author.username}`)">
-                ✍️ {{ p.author.nickname }}
+                <el-avatar
+                  :size="22"
+                  :src="p.author.avatar || undefined"
+                  style="background: #3a7afe; vertical-align: middle"
+                >{{ (p.author.nickname || 'A')[0] }}</el-avatar>
+                {{ p.author.nickname }}
               </span>
               <span>{{ formatDate(p.publishedAt) }}</span>
               <span v-if="p.categoryName" class="cat" @click="filterByCategory(p.categoryId)">
@@ -41,6 +46,7 @@
               <span v-for="t in p.tags" :key="t.id" class="tag" @click="toggleTag(t.id)">
                 # {{ t.name }}
               </span>
+              <LikeButton :target-type="'post'" :target-id="p.id" />
               <FavoriteButton :target-type="'post'" :target-id="p.id" />
               <span class="views">👁 {{ p.viewCount }} 阅读</span>
               <span class="views">💬 {{ p.commentCount }} 评论</span>
@@ -108,6 +114,7 @@ import BlogShell from '../../components/blog/BlogShell.vue'
 import MurmurStream from '../../components/blog/MurmurStream.vue'
 import AlbumGrid from '../../components/blog/AlbumGrid.vue'
 import FavoriteButton from '../../components/common/FavoriteButton.vue'
+import LikeButton from '../../components/common/LikeButton.vue'
 import { getPosts, getCategories, getTags, getSite } from '../../api'
 
 const site = ref({ title: '我的博客', author: '博主' })

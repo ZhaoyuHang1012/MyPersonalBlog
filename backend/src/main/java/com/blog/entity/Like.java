@@ -8,26 +8,21 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 说说（动态）
+ * 点赞
  */
 @Data
-@TableName("murmurs")
-public class Murmur {
+@TableName("likes")
+public class Like {
 
     @TableId(type = IdType.AUTO)
     private Long id;
 
     private Long userId;
 
-    private String content;
+    /** post / murmur */
+    private String targetType;
 
-    /** 0 仅自己可见 1 开放 */
-    private Integer visibility;
-
-    /** 配图 URL JSON 数组 */
-    private String images;
-
-    private Long likeCount;
+    private Long targetId;
 
     private LocalDateTime createdAt;
 }

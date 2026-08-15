@@ -43,6 +43,8 @@ public class PostVO {
 
     private Long commentCount;
 
+    private Long likeCount;
+
     private List<TagVO> tags;
 
     private LocalDateTime createdAt;

@@ -9,6 +9,17 @@
         <span>👁 {{ post.viewCount }} 阅读</span>
       </div>
       <div class="post-content markdown-body" v-html="post.contentHtml"></div>
+      <div class="post-like-bar">
+        <LikeButton :target-type="'post'" :target-id="post.id" />
+        <div v-if="likers.length" class="liker-avatars">
+          <el-tooltip v-for="l in likers" :key="l.id" :content="l.nickname" placement="top">
+            <el-avatar :size="30" :src="l.avatar || undefined" style="background: #3a7afe">
+              {{ (l.nickname || 'U')[0] }}
+            </el-avatar>
+          </el-tooltip>
+          <span class="liker-tip">等 {{ likers.length }} 人点赞</span>
+        </div>
+      </div>
       <div class="post-nav">
         <router-link v-if="post.prev" :to="`/post/${post.prev.id}`">← {{ post.prev.title }}</router-link>
         <span v-else></span>
@@ -27,17 +38,20 @@ import dayjs from 'dayjs'
 import hljs from 'highlight.js'
 import BlogShell from '../../components/blog/BlogShell.vue'
 import CommentSection from '../../components/comments/CommentSection.vue'
-import { getPost } from '../../api'
+import LikeButton from '../../components/common/LikeButton.vue'
+import { getPost, getLikers } from '../../api'
 
 const route = useRoute()
 const post = ref(null)
 const notFound = ref(false)
+const likers = ref([])
 
 const formatDate = (d) => (d ? dayjs(d).format('YYYY-MM-DD HH:mm') : '')
 
 const load = async () => {
   post.value = null
   notFound.value = false
+  likers.value = []
   try {
     post.value = await getPost(route.params.id)
     document.title = `${post.value.title} - 博客`
@@ -45,6 +59,11 @@ const load = async () => {
     document.querySelectorAll('.post-content pre code').forEach((el) => {
       hljs.highlightElement(el)
     })
+    try {
+      likers.value = await getLikers('post', route.params.id)
+    } catch (e) {
+      /* ignore */
+    }
   } catch (e) {
     notFound.value = true
     document.title = '文章不存在 - 博客'

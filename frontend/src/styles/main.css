@@ -730,6 +730,44 @@ a {
   color: var(--accent);
 }
 
+.murmur-actions-right {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* 文章点赞区 */
+.post-like-bar {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-top: 24px;
+  padding: 12px 0;
+  border-top: 1px dashed var(--border);
+  border-bottom: 1px dashed var(--border);
+}
+
+.liker-avatars {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.liker-avatars .el-avatar {
+  margin-left: -6px;
+  border: 2px solid var(--card-bg);
+}
+
+.liker-avatars .el-avatar:first-child {
+  margin-left: 0;
+}
+
+.liker-tip {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
 /* ============ 大厅类型 Tab ============ */
 .hall-tabs {
   display: flex;
@@ -844,6 +882,16 @@ a {
 .album-group-card:hover {
   transform: translateY(-3px);
   box-shadow: 0 8px 20px rgba(16, 24, 40, 0.12);
+}
+
+.album-group-link {
+  display: block;
+}
+
+.album-group-actions {
+  display: flex;
+  gap: 6px;
+  padding: 4px 12px 12px;
 }
 
 .album-group-card img {

@@ -18,4 +18,12 @@ public interface PostMapper extends BaseMapper<Post> {
     /** 评论数 -1（不小于 0） */
     @Update("UPDATE posts SET comment_count = GREATEST(comment_count - 1, 0) WHERE id = #{id}")
     int decrCommentCount(@Param("id") Long id);
+
+    /** 点赞数 +1 */
+    @Update("UPDATE posts SET like_count = like_count + 1 WHERE id = #{id}")
+    int incrLikeCount(@Param("id") Long id);
+
+    /** 点赞数 -1（不小于 0） */
+    @Update("UPDATE posts SET like_count = GREATEST(like_count - 1, 0) WHERE id = #{id}")
+    int decrLikeCount(@Param("id") Long id);
 }

@@ -21,6 +21,8 @@ public class MurmurVO {
 
     private List<String> images;
 
+    private Long likeCount;
+
     private LocalDateTime createdAt;
 
     private AuthorVO author;

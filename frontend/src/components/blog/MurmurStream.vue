@@ -11,7 +11,10 @@
           </router-link>
           <div class="murmur-time">{{ formatDate(m.createdAt) }}</div>
         </div>
-        <FavoriteButton :target-type="'murmur'" :target-id="m.id" style="margin-left: auto" />
+        <div class="murmur-actions-right">
+          <LikeButton :target-type="'murmur'" :target-id="m.id" />
+          <FavoriteButton :target-type="'murmur'" :target-id="m.id" />
+        </div>
       </div>
       <div class="murmur-content-text">{{ m.content }}</div>
       <div v-if="m.images && m.images.length" class="murmur-images" :class="'count-' + Math.min(m.images.length, 9)">
@@ -48,6 +51,7 @@
 import { ref, onMounted } from 'vue'
 import dayjs from 'dayjs'
 import FavoriteButton from '../common/FavoriteButton.vue'
+import LikeButton from '../common/LikeButton.vue'
 import { getMurmurs } from '../../api'
 
 const murmurs = ref([])

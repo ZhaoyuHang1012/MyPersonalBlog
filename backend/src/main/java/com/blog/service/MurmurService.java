@@ -169,6 +169,7 @@ public class MurmurService {
             vo.setContent(m.getContent());
             vo.setVisibility(m.getVisibility());
             vo.setImages(readImages(m.getImages()));
+            vo.setLikeCount(m.getLikeCount() == null ? 0L : m.getLikeCount());
             vo.setCreatedAt(m.getCreatedAt());
             User u = users.get(m.getUserId());
             if (u != null) {

@@ -45,7 +45,8 @@ public class SecurityConfig {
                                 "/api/links", "/api/murmurs/**", "/api/albums/**",
                                 "/api/hall", "/api/users/**",
                                 "/api/posts/**", "/api/categories/**", "/api/tags/**",
-                                "/api/site/**").permitAll()
+                                "/api/site/**",
+                                "/api/likes/status", "/api/likes/list").permitAll()
                         // 管理员专属
                         .requestMatchers(
                                 "/api/admin/categories/**",

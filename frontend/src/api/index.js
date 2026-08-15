@@ -45,6 +45,15 @@ export const addFavorite = (data) => http.post('/archives', data)
 export const removeFavorite = (targetType, targetId) =>
   http.delete('/archives', { params: { targetType, targetId } })
 
+// ---- 点赞 ----
+export const addLike = (data) => http.post('/likes', data)
+export const removeLike = (targetType, targetId) =>
+  http.delete('/likes', { params: { targetType, targetId } })
+export const getLikeStatus = (targetType, targetId) =>
+  http.get('/likes/status', { params: { targetType, targetId } })
+export const getLikers = (targetType, targetId) =>
+  http.get('/likes/list', { params: { targetType, targetId } })
+
 // ---- 时间线归档（按月份） ----
 export const getTimeline = () => http.get('/archive')
 
