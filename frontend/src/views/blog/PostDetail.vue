@@ -48,8 +48,10 @@ import BlogShell from '../../components/blog/BlogShell.vue'
 import CommentSection from '../../components/comments/CommentSection.vue'
 import LikeButton from '../../components/common/LikeButton.vue'
 import { getPost, getLikers } from '../../api'
+import { useUserStore } from '../../store/user'
 
 const route = useRoute()
+const userStore = useUserStore()
 const post = ref(null)
 const notFound = ref(false)
 const likers = ref([])
@@ -78,9 +80,21 @@ const load = async () => {
   }
 }
 
-/** 点赞/取消后刷新点赞人列表，让「等 N 人点赞」即时更新 */
-const refreshLikers = async () => {
+/** 点赞/取消后实时更新「等 N 人点赞」：先本地乐观更新，再后台校准 */
+const refreshLikers = async ({ liked }) => {
   if (!post.value) return
+  const me = userStore.user
+  if (me) {
+    if (liked) {
+      // 立即把自己加入点赞人列表（无需等待网络）
+      if (!likers.value.some((l) => l.id === me.id)) {
+        likers.value = [...likers.value, { id: me.id, nickname: me.nickname, avatar: me.avatar }]
+      }
+    } else {
+      likers.value = likers.value.filter((l) => l.id !== me.id)
+    }
+  }
+  // 后台静默校准，保证与其他用户数据一致
   try {
     likers.value = await getLikers('post', post.value.id)
   } catch (e) {
