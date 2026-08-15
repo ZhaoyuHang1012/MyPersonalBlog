@@ -67,19 +67,28 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import dayjs from 'dayjs'
+import { ElMessage } from 'element-plus'
 import ArchiveButton from '../../components/common/ArchiveButton.vue'
 import { getArchives } from '../../api'
 
 const activeType = ref('post')
 const data = reactive({ posts: [], murmurs: [], albums: [] })
+const loading = ref(false)
 
 const formatDate = (d) => (d ? dayjs(d).format('YYYY-MM-DD HH:mm') : '')
 
 const load = async () => {
-  const result = await getArchives(activeType.value)
-  data.posts = result.posts || []
-  data.murmurs = result.murmurs || []
-  data.albums = result.albums || []
+  loading.value = true
+  try {
+    const result = await getArchives(activeType.value)
+    data.posts = result.posts || []
+    data.murmurs = result.murmurs || []
+    data.albums = result.albums || []
+  } catch (e) {
+    ElMessage.error('归档列表加载失败，请刷新重试')
+  } finally {
+    loading.value = false
+  }
 }
 
 onMounted(load)
