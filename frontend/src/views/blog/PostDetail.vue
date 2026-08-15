@@ -1,6 +1,16 @@
 <template>
   <BlogShell>
     <main class="post-detail" v-if="post">
+      <div v-if="post.author" class="post-author-row">
+        <router-link :to="`/u/${post.author.username}`">
+          <el-avatar :size="40" :src="post.author.avatar || undefined" style="background: #3a7afe">
+            {{ (post.author.nickname || 'A')[0] }}
+          </el-avatar>
+        </router-link>
+        <router-link :to="`/u/${post.author.username}`" class="post-author-name">
+          {{ post.author.nickname }}
+        </router-link>
+      </div>
       <h1 class="post-title">{{ post.title }}</h1>
       <div class="post-meta">
         <span>📅 {{ formatDate(post.publishedAt) }}</span>
