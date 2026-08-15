@@ -36,6 +36,7 @@ export const approveFriendRequest = (id) => http.put(`/friends/requests/${id}/ap
 export const rejectFriendRequest = (id) => http.put(`/friends/requests/${id}/reject`)
 export const removeFriend = (friendId) => http.delete(`/friends/${friendId}`)
 export const getFriendRelation = (targetUserId) => http.get(`/friends/relation/${targetUserId}`)
+export const searchUsers = (keyword) => http.get('/friends/search', { params: { keyword } })
 
 // ---- 收藏 ----
 export const getFavorites = (type) => http.get('/archives', { params: { type } })

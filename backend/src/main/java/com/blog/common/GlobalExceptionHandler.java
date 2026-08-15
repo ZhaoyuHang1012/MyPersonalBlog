@@ -23,6 +23,11 @@ public class GlobalExceptionHandler {
         return Result.fail(404, "资源不存在");
     }
 
+    @ExceptionHandler(org.springframework.dao.DuplicateKeyException.class)
+    public Result<Void> handleDuplicateKey(org.springframework.dao.DuplicateKeyException e) {
+        return Result.fail(400, "昵称已被使用，请换一个");
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public Result<Void> handleValid(MethodArgumentNotValidException e) {
         FieldError fieldError = e.getBindingResult().getFieldError();

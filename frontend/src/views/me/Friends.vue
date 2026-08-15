@@ -1,6 +1,40 @@
 <template>
   <div>
-    <el-tabs v-model="activeTab">
+    <!-- 搜索添加好友 -->
+    <div class="friend-search">
+      <el-input
+        v-model="searchKw"
+        placeholder="搜索昵称或用户 ID 添加好友"
+        style="width: 300px"
+        clearable
+        @keyup.enter="doSearch"
+        @clear="searchResults = []"
+      />
+      <el-button type="primary" :loading="searching" @click="doSearch">搜索</el-button>
+    </div>
+    <div v-if="searched" class="search-results">
+      <div v-for="u in searchResults" :key="u.id" class="friend-item">
+        <el-avatar :size="40" :src="u.avatar || undefined" style="background: #3a7afe">
+          {{ (u.nickname || 'U')[0] }}
+        </el-avatar>
+        <div class="friend-info">
+          <div class="friend-name">{{ u.nickname }}</div>
+          <div class="friend-meta">@{{ u.username }} · ID: {{ u.id }}</div>
+        </div>
+        <el-button v-if="u.relation === 'none'" type="primary" size="small" @click="addFriend(u)">
+          ➕ 加好友
+        </el-button>
+        <el-button v-else-if="u.relation === 'requested'" size="small" disabled>已申请</el-button>
+        <el-button v-else-if="u.relation === 'friend'" size="small" disabled>✓ 已是好友</el-button>
+        <el-button v-else-if="u.relation === 'pending'" type="warning" size="small" @click="activeTab = 'received'; load()">
+          TA 申请了你 →
+        </el-button>
+        <el-tag v-else size="small" type="info">自己</el-tag>
+      </div>
+      <div v-if="searched && !searchResults.length" class="empty">未找到匹配的用户</div>
+    </div>
+
+    <el-tabs v-model="activeTab" @tab-change="load">
       <!-- 我的好友 -->
       <el-tab-pane :label="`我的好友（${friends.length}）`" name="friends">
         <div v-if="friends.length" class="friend-list">
@@ -71,13 +105,39 @@ import {
   getSentRequests,
   approveFriendRequest,
   rejectFriendRequest,
-  removeFriend
+  removeFriend,
+  sendFriendRequest,
+  searchUsers
 } from '../../api'
 
 const activeTab = ref('friends')
 const friends = ref([])
 const received = ref([])
 const sent = ref([])
+const searchKw = ref('')
+const searchResults = ref([])
+const searched = ref(false)
+const searching = ref(false)
+
+const doSearch = async () => {
+  if (!searchKw.value.trim()) {
+    ElMessage.warning('请输入昵称或用户 ID')
+    return
+  }
+  searching.value = true
+  searched.value = true
+  try {
+    searchResults.value = await searchUsers(searchKw.value.trim())
+  } finally {
+    searching.value = false
+  }
+}
+
+const addFriend = async (u) => {
+  await sendFriendRequest({ toUserId: u.id, message: '' })
+  ElMessage.success('好友申请已发送')
+  u.relation = 'requested'
+}
 
 const statusText = (s) => ({ 0: '待处理', 1: '已同意', 2: '已拒绝' }[s] || '未知')
 const statusTagType = (s) => ({ 0: 'warning', 1: 'success', 2: 'info' }[s] || 'info')
@@ -119,6 +179,19 @@ onMounted(load)
 </script>
 
 <style scoped>
+.friend-search {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.search-results {
+  margin-bottom: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
 .friend-list {
   display: flex;
   flex-direction: column;

@@ -162,6 +162,42 @@ public class FriendService {
                 .eq("user_id", a).eq("friend_id", b)) > 0;
     }
 
+    /** 强制建立双向好友关系（幂等，供注册自动加管理员好友等场景） */
+    @Transactional
+    public void forceFriend(Long a, Long b) {
+        if (a.equals(b)) {
+            return;
+        }
+        insertFriendPair(a, b);
+    }
+
+    /** 按昵称/用户名/ID 搜索用户（附带与当前用户的关系状态） */
+    public List<Map<String, Object>> search(String keyword, Long currentUserId) {
+        if (keyword == null || keyword.isBlank()) {
+            return new ArrayList<>();
+        }
+        String kw = keyword.trim();
+        QueryWrapper<User> qw = new QueryWrapper<>();
+        if (kw.matches("\\d+")) {
+            qw.eq("id", Long.parseLong(kw))
+                    .or().like("nickname", kw)
+                    .or().like("username", kw);
+        } else {
+            qw.like("nickname", kw).or().like("username", kw);
+        }
+        qw.last("LIMIT 20");
+        List<User> users = userMapper.selectList(qw);
+        return users.stream().map(u -> {
+            Map<String, Object> m = new java.util.HashMap<>();
+            m.put("id", u.getId());
+            m.put("username", u.getUsername());
+            m.put("nickname", u.getNickname());
+            m.put("avatar", u.getAvatar() == null ? "" : u.getAvatar());
+            m.put("relation", relation(currentUserId, u.getId()).get("relation"));
+            return m;
+        }).collect(Collectors.toList());
+    }
+
     private void insertFriendPair(Long a, Long b) {
         if (friendMapper.selectCount(new QueryWrapper<Friend>()
                 .eq("user_id", a).eq("friend_id", b)) == 0) {

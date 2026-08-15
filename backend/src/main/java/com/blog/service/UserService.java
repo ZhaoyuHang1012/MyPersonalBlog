@@ -31,12 +31,16 @@ public class UserService {
     @Transactional
     public UserVO updateProfile(Long id, ProfileUpdateRequest request) {
         requireUser(id);
+        String nickname = request.getNickname().trim();
+        if (userMapper.selectCount(new QueryWrapper<User>().eq("nickname", nickname).ne("id", id)) > 0) {
+            throw new BizException("昵称已被使用，请换一个");
+        }
         // 显式 set，支持将头像清空（updateById 默认跳过 null 字段）
         String avatar = (request.getAvatar() == null || request.getAvatar().isBlank())
                 ? null : request.getAvatar().trim();
         userMapper.update(null, new UpdateWrapper<User>()
                 .eq("id", id)
-                .set("nickname", request.getNickname().trim())
+                .set("nickname", nickname)
                 .set("avatar", avatar));
         return getById(id);
     }
@@ -74,7 +78,12 @@ public class UserService {
         boolean hasUpdate = false;
 
         if (request.getNickname() != null && !request.getNickname().isBlank()) {
-            uw.set("nickname", request.getNickname().trim());
+            String nickname = request.getNickname().trim();
+            if (userMapper.selectCount(new QueryWrapper<User>()
+                    .eq("nickname", nickname).ne("id", targetId)) > 0) {
+                throw new BizException("昵称已被使用，请换一个");
+            }
+            uw.set("nickname", nickname);
             hasUpdate = true;
         }
         if (request.getAvatar() != null) {

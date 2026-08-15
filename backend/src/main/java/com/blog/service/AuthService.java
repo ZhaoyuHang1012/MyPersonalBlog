@@ -28,6 +28,7 @@ public class AuthService {
 
     private final UserMapper userMapper;
     private final InviteCodeMapper inviteCodeMapper;
+    private final FriendService friendService;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
 
@@ -43,13 +44,17 @@ public class AuthService {
     }
 
     /**
-     * 邀请码注册（注册即登录）
+     * 邀请码注册（注册即登录；昵称唯一；自动与系统管理员互加好友）
      */
     @Transactional
     public LoginVO register(RegisterRequest request) {
         String username = request.getUsername().trim();
+        String nickname = request.getNickname().trim();
         if (userMapper.selectCount(new QueryWrapper<User>().eq("username", username)) > 0) {
             throw new BizException("用户名已被注册");
+        }
+        if (userMapper.selectCount(new QueryWrapper<User>().eq("nickname", nickname)) > 0) {
+            throw new BizException("昵称已被使用，请换一个");
         }
         // 校验邀请码
         InviteCode invite = inviteCodeMapper.selectOne(new QueryWrapper<InviteCode>()
@@ -65,11 +70,19 @@ public class AuthService {
         User user = new User();
         user.setUsername(username);
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setNickname(request.getNickname().trim());
+        user.setNickname(nickname);
         user.setRole("USER");
         user.setQuota(quotaDefault);
         user.setCreatedAt(LocalDateTime.now());
         userMapper.insert(user);
+
+        // 自动与系统管理员互加好友
+        User admin = userMapper.selectList(new QueryWrapper<User>()
+                .eq("role", "ADMIN").orderByAsc("id").last("LIMIT 1"))
+                .stream().findFirst().orElse(null);
+        if (admin != null) {
+            friendService.forceFriend(user.getId(), admin.getId());
+        }
         return buildLoginVO(user);
     }
 

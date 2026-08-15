@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -71,6 +72,12 @@ public class FriendController {
     public Result<Void> remove(@PathVariable Long friendId) {
         friendService.removeFriend(SecurityUtil.currentUserId(), friendId);
         return Result.ok();
+    }
+
+    /** 搜索用户（按昵称/用户名/ID 添加好友） */
+    @GetMapping("/search")
+    public Result<List<Map<String, Object>>> search(@RequestParam String keyword) {
+        return Result.ok(friendService.search(keyword, SecurityUtil.currentUserId()));
     }
 
     /** 与目标用户的关系（用户主页按钮状态） */
