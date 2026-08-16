@@ -122,8 +122,6 @@ const scheduleAutoSave = () => {
   }, 2000)
 }
 
-watch(form, scheduleAutoSave, { deep: true })
-
 /** 进入编辑页时检查是否有未完成的草稿 */
 const maybeRestoreDraft = async () => {
   const draft = loadDraft(draftKey.value)
@@ -160,6 +158,9 @@ const categories = ref([])
 const tags = ref([])
 const loading = ref(false)
 const saving = ref(false)
+
+// 内容变化后自动保存草稿（watch 需在 form/loading 声明之后注册）
+watch(form, scheduleAutoSave, { deep: true })
 
 const toolbars = [
   'bold', 'italic', 'strikeThrough', 'title',
