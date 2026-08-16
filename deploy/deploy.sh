@@ -25,7 +25,8 @@ apt-get install -y openjdk-17-jdk-headless nginx mysql-server
 # ---------- 2. 初始化数据库 ----------
 echo "[2/7] 初始化数据库 ..."
 mysql -uroot <<SQL
-CREATE DATABASE IF NOT EXISTS blog DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+DROP DATABASE IF EXISTS blog;
+CREATE DATABASE blog DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
 CREATE USER IF NOT EXISTS 'blog'@'localhost' IDENTIFIED BY '${DB_PASSWORD}';
 GRANT ALL PRIVILEGES ON blog.* TO 'blog'@'localhost';
 FLUSH PRIVILEGES;
