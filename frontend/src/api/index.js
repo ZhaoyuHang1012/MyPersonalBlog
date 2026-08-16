@@ -108,6 +108,8 @@ export const uploadFile = (file, onProgress) => {
   const form = new FormData()
   form.append('file', file)
   return http.post('/admin/upload', form, {
+    // 大文件（最大 5GB 视频）上传耗时长，单请求不设超时
+    timeout: 0,
     onUploadProgress: onProgress
       ? (e) => {
           if (e.total) onProgress(Math.min(100, Math.round((e.loaded / e.total) * 100)))
