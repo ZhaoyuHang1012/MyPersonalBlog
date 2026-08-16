@@ -86,7 +86,10 @@ cp -r "$PROJECT_DIR/frontend/dist" "$DEPLOY_ROOT/dist"
 # 写入生产配置中的敏感项
 sed -i "s|CHANGE_ME_DB_PASSWORD|${DB_PASSWORD}|g" "$DEPLOY_ROOT/application-prod.yml"
 sed -i "s|CHANGE_ME_JWT_SECRET|${JWT_SECRET}|g" "$DEPLOY_ROOT/application-prod.yml"
-SERVER_IP=$(hostname -I | awk '{print $1}')
+# 获取公网 IP（优先外部查询，失败回退网卡 IP）
+SERVER_IP=$(curl -s --max-time 10 https://api.ipify.org \
+  || curl -s --max-time 10 https://ip.sb \
+  || hostname -I | awk '{print $1}')
 sed -i "s|CHANGE_ME_SERVER_IP|${SERVER_IP}|g" "$DEPLOY_ROOT/application-prod.yml"
 
 # ---------- 6. systemd 服务 ----------
