@@ -18,9 +18,18 @@ echo "  部署目录: $DEPLOY_ROOT"
 echo "=============================================="
 
 # ---------- 1. 安装依赖 ----------
-echo "[1/7] 安装 JDK 17 / Nginx / MySQL ..."
+echo "[1/7] 安装 JDK 17 / Nginx / MySQL / Node.js 20 ..."
 apt-get update -y
-apt-get install -y openjdk-17-jdk-headless nginx mysql-server
+apt-get install -y curl openjdk-17-jdk-headless nginx mysql-server
+
+# 安装 Node.js 20 LTS（Vite 5 需要 Node 18+，apt 默认版本过旧）
+if ! command -v node >/dev/null 2>&1; then
+  echo "  安装 Node.js 20 LTS（NodeSource）..."
+  curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+  apt-get install -y nodejs
+fi
+node -v
+npm -v
 
 # ---------- 2. 初始化数据库 ----------
 echo "[2/7] 初始化数据库 ..."
