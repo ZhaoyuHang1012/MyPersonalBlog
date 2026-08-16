@@ -29,7 +29,8 @@
     <!-- 我的相册列表 -->
     <div v-if="groups.length" class="my-album-grid">
       <div v-for="g in groups" :key="g.id" class="my-album-card">
-        <img v-if="g.cover" :src="g.cover" :alt="g.name" />
+        <VideoThumb v-if="isVideoUrl(g.cover)" :src="g.cover" class="my-album-cover-video" />
+        <img v-else-if="g.cover" :src="g.cover" :alt="g.name" />
         <div v-else class="album-no-cover">📷</div>
         <div class="my-album-info">
           <div class="my-album-name">
@@ -124,6 +125,8 @@ const photos = ref([])
 const editVisible = ref(false)
 const editForm = ref({ id: null, name: '', visibility: 1 })
 const uploadList = ref([])
+
+const isVideoUrl = (url) => /\.(mp4|webm|mov|m4v|avi)(\?.*)?$/i.test(url || '')
 
 const load = async () => {
   groups.value = await adminListAlbums()

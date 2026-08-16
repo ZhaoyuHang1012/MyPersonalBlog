@@ -47,7 +47,8 @@
       <div v-if="data.albums.length" class="album-group-grid">
         <div v-for="g in data.albums" :key="g.id" class="album-group-card-wrap">
           <router-link :to="`/album/${g.id}`" class="album-group-card">
-            <img v-if="g.cover" :src="g.cover" :alt="g.name" loading="lazy" />
+            <VideoThumb v-if="isVideoUrl(g.cover)" :src="g.cover" class="album-group-cover-video" />
+            <img v-else-if="g.cover" :src="g.cover" :alt="g.name" loading="lazy" />
             <div v-else class="album-no-cover">📷</div>
             <div class="album-group-info">
               <div class="album-group-name">{{ g.name }}</div>
@@ -69,11 +70,14 @@ import { ref, reactive, onMounted } from 'vue'
 import dayjs from 'dayjs'
 import { ElMessage } from 'element-plus'
 import FavoriteButton from '../../components/common/FavoriteButton.vue'
+import VideoThumb from '../../components/common/VideoThumb.vue'
 import { getFavorites } from '../../api'
 
 const activeType = ref('post')
 const data = reactive({ posts: [], murmurs: [], albums: [] })
 const loading = ref(false)
+
+const isVideoUrl = (url) => /\.(mp4|webm|mov|m4v|avi)(\?.*)?$/i.test(url || '')
 
 const formatDate = (d) => (d ? dayjs(d).format('YYYY-MM-DD HH:mm') : '')
 
