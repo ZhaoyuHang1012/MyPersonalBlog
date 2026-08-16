@@ -41,12 +41,23 @@ done
 
 # ---------- 3. 构建后端 ----------
 echo "[4/7] 构建后端 jar ..."
-if [ ! -x "$PROJECT_DIR/tools/apache-maven-3.9.9/bin/mvn" ]; then
-  echo "  未找到项目自带 Maven，尝试系统 mvn ..."
+
+# 修正项目 Maven 配置的本地仓库路径为 Linux 路径（settings.xml 中原本是 Windows 路径）
+sed -i 's|<localRepository>.*</localRepository>|<localRepository>/root/.m2/repository</localRepository>|' \
+  "$PROJECT_DIR/tools/settings.xml"
+
+if [ -f "$PROJECT_DIR/tools/apache-maven-3.9.9/bin/mvn" ]; then
+  # Windows 打包上传后无执行权限，先补上
+  chmod +x "$PROJECT_DIR/tools/apache-maven-3.9.9/bin/mvn"
+  MVN="$PROJECT_DIR/tools/apache-maven-3.9.9/bin/mvn"
+elif command -v mvn >/dev/null 2>&1; then
+  echo "  未找到项目自带 Maven，使用系统 mvn ..."
   MVN="mvn"
 else
-  MVN="$PROJECT_DIR/tools/apache-maven-3.9.9/bin/mvn"
+  echo "[ERROR] 未找到 Maven。请确认项目包含 tools/apache-maven-3.9.9 目录。"
+  exit 1
 fi
+
 (cd "$PROJECT_DIR/backend" && "$MVN" -B -DskipTests package -s "$PROJECT_DIR/tools/settings.xml" -gs "$PROJECT_DIR/tools/settings.xml")
 
 # ---------- 4. 构建前端 ----------
