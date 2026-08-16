@@ -251,6 +251,18 @@ a {
   color: var(--text-secondary);
 }
 
+/* 编辑器自动保存提示 */
+.autosave-hint {
+  display: inline-block;
+  font-size: 12px;
+  color: #67c23a;
+  margin-left: 12px;
+}
+
+html[data-theme='dark'] .autosave-hint {
+  color: #85ce61;
+}
+
 .summary {
   color: var(--text-secondary);
   font-size: 14px;

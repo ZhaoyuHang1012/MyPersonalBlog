@@ -18,7 +18,7 @@
         />
       </el-select>
       <div class="spacer"></div>
-      <el-button type="primary" @click="publishVisible = true">➕ 发布说说</el-button>
+      <el-button type="primary" @click="openPublish">➕ 发布说说</el-button>
     </div>
 
     <!-- 发布弹窗 -->
@@ -51,6 +51,7 @@
           <el-radio-button :value="0">仅自己可见</el-radio-button>
         </el-radio-group>
       </div>
+      <div v-if="pubHint" class="autosave-hint">💾 {{ pubHint }}</div>
       <template #footer>
         <el-button @click="publishVisible = false">取消</el-button>
         <el-button type="primary" :loading="publishing" @click="publish">发布</el-button>
@@ -115,6 +116,7 @@
         </el-radio-group>
       </div>
       <p class="edit-tip">配图不可在此修改，如需调整请删除后重新发布</p>
+      <div v-if="editHint" class="autosave-hint">💾 {{ editHint }}</div>
       <template #footer>
         <el-button @click="editVisible = false">取消</el-button>
         <el-button type="primary" :loading="saving" @click="saveEdit">保存</el-button>
@@ -124,12 +126,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
 import dayjs from 'dayjs'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import CommentSection from '../../components/comments/CommentSection.vue'
 import { adminListMurmurs, adminCreateMurmur, adminUpdateMurmur, adminDeleteMurmur, uploadFile, adminListUsers } from '../../api'
 import { useUserStore } from '../../store/user'
+import { saveDraft, loadDraft, clearDraft } from '../../utils/draft'
 
 const userStore = useUserStore()
 const users = ref([])
@@ -153,10 +156,92 @@ const editVisible = ref(false)
 const saving = ref(false)
 const editForm = ref({ id: null, content: '', visibility: 1 })
 
-const openEdit = (m) => {
+// ==================== 自动保存草稿 ====================
+const pubHint = ref('')
+const editHint = ref('')
+let pubTimer = null
+let editTimer = null
+
+/** 发布弹窗：打开前检查草稿 */
+const openPublish = async () => {
+  const draft = loadDraft('murmur-new')
+  if (draft) {
+    try {
+      await ElMessageBox.confirm(
+        `检测到 ${dayjs(draft.at).format('MM-DD HH:mm')} 未完成的说说，是否恢复继续编辑？`,
+        '恢复草稿',
+        { confirmButtonText: '恢复继续', cancelButtonText: '丢弃草稿', type: 'info' }
+      )
+      content.value = draft.value.content || ''
+      pickedImages.value = draft.value.images || []
+      visibility.value = draft.value.visibility ?? 1
+      pubHint.value = '已恢复上次的编辑内容'
+    } catch (e) {
+      clearDraft('murmur-new')
+    }
+  }
+  publishVisible.value = true
+}
+
+watch([content, pickedImages, visibility], () => {
+  if (!publishVisible.value) return
+  clearTimeout(pubTimer)
+  pubTimer = setTimeout(() => {
+    // 内容与配图全部清空时不再保留草稿
+    if (!content.value.trim() && !pickedImages.value.length) {
+      clearDraft('murmur-new')
+      pubHint.value = ''
+      return
+    }
+    if (saveDraft('murmur-new', {
+      content: content.value,
+      images: [...pickedImages.value],
+      visibility: visibility.value
+    })) {
+      pubHint.value = `已自动保存 ${dayjs().format('HH:mm:ss')}`
+    }
+  }, 2000)
+}, { deep: true })
+
+/** 编辑弹窗：打开前检查该说说的草稿 */
+const openEdit = async (m) => {
   editForm.value = { id: m.id, content: m.content, visibility: m.visibility, images: m.images || [] }
+  const draft = loadDraft(`murmur-edit-${m.id}`)
+  if (draft) {
+    try {
+      await ElMessageBox.confirm(
+        `检测到 ${dayjs(draft.at).format('MM-DD HH:mm')} 对这条说说的未完成编辑，是否恢复？`,
+        '恢复草稿',
+        { confirmButtonText: '恢复继续', cancelButtonText: '丢弃草稿', type: 'info' }
+      )
+      editForm.value.content = draft.value.content ?? editForm.value.content
+      editForm.value.visibility = draft.value.visibility ?? editForm.value.visibility
+      editHint.value = '已恢复上次的编辑内容'
+    } catch (e) {
+      clearDraft(`murmur-edit-${m.id}`)
+    }
+  }
   editVisible.value = true
 }
+
+watch(editForm, () => {
+  if (!editVisible.value || !editForm.value.id) return
+  clearTimeout(editTimer)
+  editTimer = setTimeout(() => {
+    // 内容清空时不再保留草稿
+    if (!editForm.value.content.trim()) {
+      clearDraft(`murmur-edit-${editForm.value.id}`)
+      editHint.value = ''
+      return
+    }
+    if (saveDraft(`murmur-edit-${editForm.value.id}`, {
+      content: editForm.value.content,
+      visibility: editForm.value.visibility
+    })) {
+      editHint.value = `已自动保存 ${dayjs().format('HH:mm:ss')}`
+    }
+  }, 2000)
+}, { deep: true })
 
 const saveEdit = async () => {
   if (!editForm.value.content.trim()) {
@@ -171,6 +256,8 @@ const saveEdit = async () => {
       images: editForm.value.images
     })
     ElMessage.success('已保存')
+    clearDraft(`murmur-edit-${editForm.value.id}`)
+    editHint.value = ''
     editVisible.value = false
     load()
   } catch (e) {
@@ -220,6 +307,8 @@ const publish = async () => {
       visibility: visibility.value
     })
     ElMessage.success('发布成功')
+    clearDraft('murmur-new')
+    pubHint.value = ''
     content.value = ''
     pickedImages.value = []
     visibility.value = 1
@@ -253,6 +342,11 @@ onMounted(() => {
     adminListUsers().then((list) => (users.value = list)).catch(() => {})
   }
   load()
+})
+
+onBeforeUnmount(() => {
+  clearTimeout(pubTimer)
+  clearTimeout(editTimer)
 })
 </script>
 

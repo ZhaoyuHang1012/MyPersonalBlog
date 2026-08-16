@@ -67,15 +67,17 @@
       <el-form-item>
         <el-button type="primary" :loading="saving" @click="save">保存</el-button>
         <el-button @click="$router.back()">返回</el-button>
+        <span v-if="autoSaveHint" class="autosave-hint">💾 {{ autoSaveHint }}</span>
       </el-form-item>
     </el-form>
   </div>
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { ElMessage } from 'element-plus'
+import { ElMessage, ElMessageBox } from 'element-plus'
+import dayjs from 'dayjs'
 import { MdEditor } from 'md-editor-v3'
 import 'md-editor-v3/lib/style.css'
 import {
@@ -87,6 +89,7 @@ import {
   adminCreateTag,
   uploadFile
 } from '../../api'
+import { saveDraft, loadDraft, clearDraft } from '../../utils/draft'
 
 const route = useRoute()
 const router = useRouter()
@@ -97,6 +100,51 @@ const listPath = computed(() => {
   if (route.path.startsWith('/posts')) return '/posts'
   return '/admin/posts'
 })
+
+// ==================== 自动保存草稿 ====================
+const draftKey = computed(() => (isEdit.value ? `post-edit-${route.params.id}` : 'post-new'))
+const autoSaveHint = ref('')
+let draftTimer = null
+
+const scheduleAutoSave = () => {
+  clearTimeout(draftTimer)
+  draftTimer = setTimeout(() => {
+    if (loading.value) return
+    // 内容全部清空时不再保留草稿
+    if (!(form.value.title || '').trim() && !(form.value.contentMd || '').trim() && !(form.value.summary || '').trim()) {
+      clearDraft(draftKey.value)
+      autoSaveHint.value = ''
+      return
+    }
+    if (saveDraft(draftKey.value, { ...form.value })) {
+      autoSaveHint.value = `已自动保存 ${dayjs().format('HH:mm:ss')}`
+    }
+  }, 2000)
+}
+
+watch(form, scheduleAutoSave, { deep: true })
+
+/** 进入编辑页时检查是否有未完成的草稿 */
+const maybeRestoreDraft = async () => {
+  const draft = loadDraft(draftKey.value)
+  if (!draft) return
+  // 草稿与当前内容一致（例如上次进入后未做改动），直接静默丢弃
+  if (JSON.stringify(draft.value) === JSON.stringify(form.value)) {
+    clearDraft(draftKey.value)
+    return
+  }
+  try {
+    await ElMessageBox.confirm(
+      `检测到 ${dayjs(draft.at).format('YYYY-MM-DD HH:mm')} 未完成的编辑，是否恢复继续？`,
+      '恢复草稿',
+      { confirmButtonText: '恢复继续', cancelButtonText: '丢弃草稿', type: 'info' }
+    )
+    form.value = { ...form.value, ...(draft.value || {}) }
+    autoSaveHint.value = '已恢复上次的编辑内容'
+  } catch (e) {
+    clearDraft(draftKey.value)
+  }
+}
 
 const form = ref({
   title: '',
@@ -145,9 +193,16 @@ const loadPost = async () => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   loadOptions().catch(() => {})
-  if (isEdit.value) loadPost()
+  if (isEdit.value) {
+    await loadPost().catch(() => {})
+  }
+  maybeRestoreDraft()
+})
+
+onBeforeUnmount(() => {
+  clearTimeout(draftTimer)
 })
 
 // 编辑器图片上传：逐个上传到服务器，成功后回填 URL
@@ -203,6 +258,8 @@ const save = async () => {
       await adminCreatePost(payload)
     }
     ElMessage.success('保存成功')
+    clearDraft(draftKey.value)
+    autoSaveHint.value = ''
     router.push(listPath.value)
   } catch (e) {
     /* 错误已由拦截器提示 */
