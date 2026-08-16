@@ -19,3 +19,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# 上传文件（用户图片/视频，不入库，避免仓库过大）
+uploads/
