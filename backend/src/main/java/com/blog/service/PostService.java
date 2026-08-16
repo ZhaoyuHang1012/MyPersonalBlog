@@ -253,9 +253,12 @@ public class PostService {
         // 作者
         List<Long> userIds = posts.stream().map(Post::getUserId)
                 .filter(Objects::nonNull).distinct().collect(Collectors.toList());
-        Map<Long, User> users = userIds.isEmpty() ? Map.of()
-                : userMapper.selectBatchIds(userIds).stream()
-                .collect(Collectors.toMap(User::getId, u -> u));
+        // 使用 HashMap 而非 Map.of()：Map.of() 对 null key 会抛 NPE（历史文章可能无作者）
+        Map<Long, User> users = new HashMap<>();
+        if (!userIds.isEmpty()) {
+            users.putAll(userMapper.selectBatchIds(userIds).stream()
+                    .collect(Collectors.toMap(User::getId, u -> u)));
+        }
 
         // 标签
         List<PostTag> postTags = postTagMapper.selectList(new QueryWrapper<PostTag>().in("post_id", postIds));

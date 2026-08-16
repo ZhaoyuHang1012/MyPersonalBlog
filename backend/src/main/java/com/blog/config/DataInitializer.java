@@ -93,6 +93,9 @@ public class DataInitializer implements ApplicationRunner {
                 > 现在就去后台写下你的第一篇文章吧！
                 """;
         Post post = new Post();
+        // 示例文章归属管理员，避免 user_id 为 NULL 导致大厅接口异常
+        User adminUser = userMapper.selectOne(new QueryWrapper<User>().eq("username", "admin"));
+        post.setUserId(adminUser != null ? adminUser.getId() : null);
         post.setTitle("欢迎使用我的博客平台");
         post.setSummary("这是一篇示例文章，介绍博客平台的基础功能。");
         post.setContentMd(md);

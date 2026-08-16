@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -166,9 +167,12 @@ public class AlbumService {
         List<Long> groupIds = groups.stream().map(AlbumGroup::getId).collect(Collectors.toList());
         List<Long> userIds = groups.stream().map(AlbumGroup::getUserId)
                 .filter(Objects::nonNull).distinct().collect(Collectors.toList());
-        Map<Long, User> users = userIds.isEmpty() ? Map.of()
-                : userMapper.selectBatchIds(userIds).stream()
-                .collect(Collectors.toMap(User::getId, u -> u));
+        // HashMap 而非 Map.of()：Map.of() 对 null key 会抛 NPE
+        Map<Long, User> users = new HashMap<>();
+        if (!userIds.isEmpty()) {
+            users.putAll(userMapper.selectBatchIds(userIds).stream()
+                    .collect(Collectors.toMap(User::getId, u -> u)));
+        }
         Map<Long, Long> counts = photoMapper.selectList(new QueryWrapper<AlbumPhoto>().in("group_id", groupIds))
                 .stream().collect(Collectors.groupingBy(AlbumPhoto::getGroupId, Collectors.counting()));
         return groups.stream().map(g -> {
