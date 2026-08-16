@@ -39,7 +39,7 @@ public class MurmurController {
 
     @GetMapping("/{id}/comments")
     public Result<List<CommentVO>> comments(@PathVariable Long id) {
-        return Result.ok(commentService.listByMurmur(id));
+        return Result.ok(commentService.listByMurmur(id, SecurityUtil.currentUserId()));
     }
 
     @PostMapping("/{id}/comments")

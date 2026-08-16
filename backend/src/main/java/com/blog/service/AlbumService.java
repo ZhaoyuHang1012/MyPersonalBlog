@@ -33,17 +33,41 @@ public class AlbumService {
     private final AlbumGroupMapper groupMapper;
     private final AlbumPhotoMapper photoMapper;
     private final UserMapper userMapper;
+    private final FriendService friendService;
 
     // ==================== 前台 ====================
 
-    /** 大厅：登录用户展示自己+好友的公开相册；未登录展示全部公开相册 */
+    /** 大厅：登录用户展示自己+好友的相册（公共+仅好友可见）；未登录仅展示公共相册 */
     public List<AlbumGroupVO> listPublic(Long viewerId) {
         QueryWrapper<AlbumGroup> qw = new QueryWrapper<>();
-        qw.eq("visibility", 1);
-        if (viewerId != null) {
+        if (viewerId == null) {
+            qw.eq("visibility", 1);
+        } else {
+            qw.in("visibility", 1, 2);
             qw.and(w -> w.eq("user_id", viewerId)
                     .or().inSql("user_id",
                             "SELECT friend_id FROM friends WHERE user_id = " + viewerId));
+        }
+        qw.orderByDesc("id");
+        return toVOList(groupMapper.selectList(qw));
+    }
+
+    /** 某用户的相册列表（个人博客页，按查看者权限过滤） */
+    public List<AlbumGroupVO> listUserAlbums(String username, Long viewerId) {
+        User author = userMapper.selectOne(new QueryWrapper<User>().eq("username", username));
+        if (author == null) {
+            throw new BizException(404, "用户不存在");
+        }
+        QueryWrapper<AlbumGroup> qw = new QueryWrapper<>();
+        qw.eq("user_id", author.getId());
+        if (viewerId == null) {
+            qw.eq("visibility", 1);
+        } else if (viewerId.equals(author.getId())) {
+            qw.in("visibility", 0, 1, 2);
+        } else if (friendService.isFriendOf(viewerId, author.getId())) {
+            qw.in("visibility", 1, 2);
+        } else {
+            qw.eq("visibility", 1);
         }
         qw.orderByDesc("id");
         return toVOList(groupMapper.selectList(qw));
@@ -60,11 +84,10 @@ public class AlbumService {
         return toVOList(ordered);
     }
 
-    /** 相册详情（公开组任何人可看；私有组仅所有者） */
+    /** 相册详情（公共任何人；仅好友可见仅作者与好友；仅自己可见仅所有者） */
     public Map<String, Object> detail(Long groupId, Long viewerId) {
         AlbumGroup group = requireGroup(groupId);
-        boolean isOwner = viewerId != null && viewerId.equals(group.getUserId());
-        if (group.getVisibility() != 1 && !isOwner) {
+        if (!friendService.canViewContent(group.getVisibility(), group.getUserId(), viewerId)) {
             throw new BizException(404, "相册不存在");
         }
         AlbumGroupVO vo = toVOList(List.of(group)).get(0);

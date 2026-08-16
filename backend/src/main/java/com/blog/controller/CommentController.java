@@ -28,7 +28,7 @@ public class CommentController {
 
     @GetMapping("/{postId}/comments")
     public Result<List<CommentVO>> list(@PathVariable Long postId) {
-        return Result.ok(commentService.listByPost(postId));
+        return Result.ok(commentService.listByPost(postId, currentUserId()));
     }
 
     @PostMapping("/{postId}/comments")

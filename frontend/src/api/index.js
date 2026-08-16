@@ -8,6 +8,8 @@ export const getMe = () => http.get('/auth/me')
 // ---- 用户 / 大厅 ----
 export const getUserInfo = (username) => http.get(`/users/${username}`)
 export const getUserPosts = (username, params) => http.get(`/users/${username}/posts`, { params })
+export const getUserMurmurs = (username, params) => http.get(`/users/${username}/murmurs`, { params })
+export const getUserAlbums = (username) => http.get(`/users/${username}/albums`)
 export const getHall = (params) => http.get('/hall', { params })
 
 // ---- 前台 ----

@@ -44,17 +44,24 @@ public class PostService {
     private final TagMapper tagMapper;
     private final UserMapper userMapper;
     private final MarkdownService markdownService;
+    private final FriendService friendService;
 
     // ==================== 前台 ====================
 
     /**
-     * 大厅：登录用户展示自己+好友的公开文章；未登录展示全部公开文章
+     * 大厅：登录用户展示自己+好友的文章（公共+仅好友可见）；未登录仅展示公共文章
      * 支持多标签（同时包含所选全部标签）
      */
     public PageResult<PostVO> listHall(int page, int size, Long categoryId, List<Long> tagIds,
                                        String keyword, Long viewerId) {
-        QueryWrapper<Post> qw = publicWrapper();
-        if (viewerId != null) {
+        QueryWrapper<Post> qw = new QueryWrapper<>();
+        qw.eq("status", 1);
+        if (viewerId == null) {
+            // 未登录：仅公共
+            qw.eq("visibility", 1);
+        } else {
+            // 登录：自己+好友的 公共+仅好友可见（仅自己可见不进大厅）
+            qw.in("visibility", 1, 2);
             qw.and(w -> w.eq("user_id", viewerId)
                     .or().inSql("user_id",
                             "SELECT friend_id FROM friends WHERE user_id = " + viewerId));
@@ -87,30 +94,30 @@ public class PostService {
         return toVOList(ordered, false);
     }
 
-    /** 某用户的公开文章列表（个人博客页） */
-    public PageResult<PostVO> listUserPosts(String username, int page, int size) {
+    /** 某用户的文章列表（个人博客页，按查看者权限过滤：公共 / 好友可见 / 作者本人全部） */
+    public PageResult<PostVO> listUserPosts(String username, int page, int size, Long viewerId) {
         User author = userMapper.selectOne(new QueryWrapper<User>().eq("username", username));
         if (author == null) {
             throw new BizException(404, "用户不存在");
         }
-        QueryWrapper<Post> qw = publicWrapper();
-        qw.eq("user_id", author.getId())
-                .orderByDesc("is_top").orderByDesc("published_at").orderByDesc("id");
+        QueryWrapper<Post> qw = new QueryWrapper<>();
+        qw.eq("user_id", author.getId()).eq("status", 1);
+        applyVisibilityFilter(qw, author.getId(), viewerId);
+        qw.orderByDesc("is_top").orderByDesc("published_at").orderByDesc("id");
         Page<Post> result = postMapper.selectPage(new Page<>(page, size), qw);
         return new PageResult<>(toVOList(result.getRecords(), false),
                 result.getTotal(), result.getCurrent(), result.getSize());
     }
 
     /**
-     * 文章详情（「仅自己可见」文章仅作者本人可看）
+     * 文章详情（按可见性：公共任何人 / 仅好友可见仅作者与好友 / 仅自己可见仅作者）
      */
     public PostVO getDetail(Long id, Long viewerId) {
         Post post = postMapper.selectById(id);
         if (post == null || post.getStatus() != 1) {
             throw new BizException(404, "文章不存在");
         }
-        boolean isOwner = viewerId != null && viewerId.equals(post.getUserId());
-        if (post.getVisibility() != 1 && !isOwner) {
+        if (!friendService.canViewContent(post.getVisibility(), post.getUserId(), viewerId)) {
             throw new BizException(404, "文章不存在");
         }
         postMapper.incrementViewCount(id);
@@ -131,6 +138,19 @@ public class PostService {
             vo.setNext(new PostVO.LinkVO(next.getId(), next.getTitle()));
         }
         return vo;
+    }
+
+    /** 用户主页可见性过滤：未登录仅公共；作者本人全部；好友可看公共+好友可见；其余仅公共 */
+    private void applyVisibilityFilter(QueryWrapper<Post> qw, Long authorId, Long viewerId) {
+        if (viewerId == null) {
+            qw.eq("visibility", 1);
+        } else if (viewerId.equals(authorId)) {
+            qw.in("visibility", 0, 1, 2);
+        } else if (friendService.isFriendOf(viewerId, authorId)) {
+            qw.in("visibility", 1, 2);
+        } else {
+            qw.eq("visibility", 1);
+        }
     }
 
     // ==================== 后台 ====================

@@ -40,13 +40,22 @@ public class CommentService {
     private final MurmurMapper murmurMapper;
     private final UserMapper userMapper;
     private final SiteService siteService;
+    private final FriendService friendService;
 
     // ==================== 前台 ====================
 
     /**
      * 文章评论列表（仅已通过，两层树：顶级 + 楼中楼回复）
+     * 与文章详情同权限：无法查看文章则同样无法查看评论
      */
-    public List<CommentVO> listByPost(Long postId) {
+    public List<CommentVO> listByPost(Long postId, Long viewerId) {
+        Post post = postMapper.selectById(postId);
+        if (post == null || post.getStatus() != 1) {
+            throw new BizException(404, "文章不存在");
+        }
+        if (!friendService.canViewContent(post.getVisibility(), post.getUserId(), viewerId)) {
+            throw new BizException(404, "文章不存在");
+        }
         List<Comment> all = commentMapper.selectList(new QueryWrapper<Comment>()
                 .eq("post_id", postId)
                 .eq("status", 1)
@@ -57,8 +66,16 @@ public class CommentService {
 
     /**
      * 说说评论列表（仅已通过，两层树，与文章评论区同款）
+     * 与说说同权限：无法查看说说则同样无法查看评论
      */
-    public List<CommentVO> listByMurmur(Long murmurId) {
+    public List<CommentVO> listByMurmur(Long murmurId, Long viewerId) {
+        Murmur murmur = murmurMapper.selectById(murmurId);
+        if (murmur == null) {
+            throw new BizException(404, "说说不存在");
+        }
+        if (!friendService.canViewContent(murmur.getVisibility(), murmur.getUserId(), viewerId)) {
+            throw new BizException(404, "说说不存在");
+        }
         List<Comment> all = commentMapper.selectList(new QueryWrapper<Comment>()
                 .eq("murmur_id", murmurId)
                 .eq("status", 1)
@@ -114,9 +131,9 @@ public class CommentService {
         if (user == null) {
             throw new BizException(401, "登录状态已失效，请重新登录");
         }
-        // 「仅自己可见」文章仅作者本人可评论
-        if (post.getVisibility() != 1 && !userId.equals(post.getUserId())) {
-            throw new BizException(403, "该文章仅作者可见，无法评论");
+        // 可见性：公共任何人可评论；仅好友可见仅作者与好友；仅自己可见仅作者
+        if (!friendService.canViewContent(post.getVisibility(), post.getUserId(), userId)) {
+            throw new BizException(403, "没有权限评论该文章");
         }
         if (request.getParentId() != null) {
             Comment parent = commentMapper.selectById(request.getParentId());
@@ -164,9 +181,9 @@ public class CommentService {
         if (user == null) {
             throw new BizException(401, "登录状态已失效，请重新登录");
         }
-        // 「仅自己可见」说说仅作者本人可评论
-        if (murmur.getVisibility() != 1 && !userId.equals(murmur.getUserId())) {
-            throw new BizException(403, "该说说仅作者可见，无法评论");
+        // 可见性：公共任何人可评论；仅好友可见仅作者与好友；仅自己可见仅作者
+        if (!friendService.canViewContent(murmur.getVisibility(), murmur.getUserId(), userId)) {
+            throw new BizException(403, "没有权限评论该说说");
         }
         if (request.getParentId() != null) {
             Comment parent = commentMapper.selectById(request.getParentId());

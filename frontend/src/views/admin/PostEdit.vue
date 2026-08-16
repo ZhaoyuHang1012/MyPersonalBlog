@@ -51,7 +51,8 @@
       </el-form-item>
       <el-form-item label="可见性">
         <el-radio-group v-model="form.visibility">
-          <el-radio :value="1">开放（大厅和个人主页可见）</el-radio>
+          <el-radio :value="1">公共（所有人可见）</el-radio>
+          <el-radio :value="2">仅好友可见</el-radio>
           <el-radio :value="0">仅自己可见</el-radio>
         </el-radio-group>
       </el-form-item>

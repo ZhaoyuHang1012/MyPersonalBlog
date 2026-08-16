@@ -40,6 +40,7 @@
               <span class="views">👁 {{ p.viewCount }} 阅读</span>
               <span class="views">💬 {{ p.commentCount }} 评论</span>
               <span class="views">👍 {{ p.likeCount || 0 }} 点赞</span>
+              <span v-if="p.visibility === 2" class="friend-badge">👥 仅好友可见</span>
               <span v-if="p.visibility === 0" class="private-badge">🔒 仅自己可见</span>
             </div>
             <div class="card-actions">

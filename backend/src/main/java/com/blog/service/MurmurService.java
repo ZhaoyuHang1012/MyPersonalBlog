@@ -39,15 +39,41 @@ public class MurmurService {
     private final UserMapper userMapper;
     private final CommentMapper commentMapper;
     private final ObjectMapper objectMapper;
+    private final FriendService friendService;
 
-    /** 大厅：登录用户展示自己+好友的公开说说；未登录展示全部公开说说 */
+    /** 大厅：登录用户展示自己+好友的说说（公共+仅好友可见）；未登录仅展示公共说说 */
     public PageResult<MurmurVO> listPublic(int page, int size, Long viewerId) {
         QueryWrapper<Murmur> qw = new QueryWrapper<>();
-        qw.eq("visibility", 1);
-        if (viewerId != null) {
+        if (viewerId == null) {
+            qw.eq("visibility", 1);
+        } else {
+            qw.in("visibility", 1, 2);
             qw.and(w -> w.eq("user_id", viewerId)
                     .or().inSql("user_id",
                             "SELECT friend_id FROM friends WHERE user_id = " + viewerId));
+        }
+        qw.orderByDesc("id");
+        Page<Murmur> result = murmurMapper.selectPage(new Page<>(page, size), qw);
+        return new PageResult<>(toVOList(result.getRecords()), result.getTotal(),
+                result.getCurrent(), result.getSize());
+    }
+
+    /** 某用户的说说列表（个人博客页，按查看者权限过滤） */
+    public PageResult<MurmurVO> listUserMurmurs(String username, int page, int size, Long viewerId) {
+        User author = userMapper.selectOne(new QueryWrapper<User>().eq("username", username));
+        if (author == null) {
+            throw new BizException(404, "用户不存在");
+        }
+        QueryWrapper<Murmur> qw = new QueryWrapper<>();
+        qw.eq("user_id", author.getId());
+        if (viewerId == null) {
+            qw.eq("visibility", 1);
+        } else if (viewerId.equals(author.getId())) {
+            qw.in("visibility", 0, 1, 2);
+        } else if (friendService.isFriendOf(viewerId, author.getId())) {
+            qw.in("visibility", 1, 2);
+        } else {
+            qw.eq("visibility", 1);
         }
         qw.orderByDesc("id");
         Page<Murmur> result = murmurMapper.selectPage(new Page<>(page, size), qw);

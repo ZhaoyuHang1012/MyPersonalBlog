@@ -14,7 +14,8 @@
         </el-form-item>
         <el-form-item label="权限">
           <el-radio-group v-model="newVisibility">
-            <el-radio :value="1">公开</el-radio>
+            <el-radio :value="1">公共</el-radio>
+            <el-radio :value="2">仅好友可见</el-radio>
             <el-radio :value="0">仅自己可见</el-radio>
           </el-radio-group>
         </el-form-item>
@@ -33,6 +34,7 @@
         <div class="my-album-info">
           <div class="my-album-name">
             {{ g.name }}
+            <el-tag v-if="g.visibility === 2" size="small" type="warning">仅好友可见</el-tag>
             <el-tag v-if="g.visibility === 0" size="small" type="info">私密</el-tag>
           </div>
           <div class="my-album-meta">{{ g.photoCount }} 个内容</div>
@@ -54,7 +56,8 @@
         </el-form-item>
         <el-form-item label="权限">
           <el-radio-group v-model="editForm.visibility">
-            <el-radio :value="1">公开</el-radio>
+            <el-radio :value="1">公共</el-radio>
+            <el-radio :value="2">仅好友可见</el-radio>
             <el-radio :value="0">仅自己可见</el-radio>
           </el-radio-group>
         </el-form-item>

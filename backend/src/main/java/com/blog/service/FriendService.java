@@ -162,6 +162,28 @@ public class FriendService {
                 .eq("user_id", a).eq("friend_id", b)) > 0;
     }
 
+    /** 两人是否为好友（对外供内容可见性判断使用） */
+    public boolean isFriendOf(Long a, Long b) {
+        return a != null && b != null && isFriend(a, b);
+    }
+
+    /**
+     * 内容可见性判断：viewer 能否看到 author 发布的指定权限级别内容
+     * visibility: 1=公共（任何人） 2=仅好友可见 0=仅自己可见
+     */
+    public boolean canViewContent(Integer visibility, Long authorId, Long viewerId) {
+        if (visibility == null || visibility == 1) {
+            return true;
+        }
+        if (viewerId == null) {
+            return false;
+        }
+        if (viewerId.equals(authorId)) {
+            return true;
+        }
+        return visibility == 2 && isFriend(viewerId, authorId);
+    }
+
     /** 强制建立双向好友关系（幂等，供注册自动加管理员好友等场景） */
     @Transactional
     public void forceFriend(Long a, Long b) {

@@ -207,6 +207,11 @@ a {
   color: #909399;
 }
 
+.friend-badge {
+  font-size: 12px;
+  color: #e6a23c;
+}
+
 .post-title-plain {
   color: var(--text);
   font-weight: 600;

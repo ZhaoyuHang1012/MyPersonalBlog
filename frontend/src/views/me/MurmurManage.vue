@@ -47,7 +47,8 @@
           <el-button size="small" :disabled="pickedImages.length >= 9">🖼 添加图片</el-button>
         </el-upload>
         <el-radio-group v-model="visibility" size="small">
-          <el-radio-button :value="1">公开</el-radio-button>
+          <el-radio-button :value="1">公共</el-radio-button>
+          <el-radio-button :value="2">仅好友可见</el-radio-button>
           <el-radio-button :value="0">仅自己可见</el-radio-button>
         </el-radio-group>
       </div>
@@ -65,6 +66,7 @@
           {{ m.author.nickname }}
         </span>
         <span class="murmur-item-time">{{ formatDate(m.createdAt) }}</span>
+        <el-tag v-if="m.visibility === 2" size="small" type="warning">仅好友可见</el-tag>
         <el-tag v-if="m.visibility === 0" size="small" type="info">仅自己可见</el-tag>
         <el-button link type="primary" size="small" @click="openEdit(m)">编辑</el-button>
         <el-button link type="danger" size="small" @click="remove(m)">删除</el-button>
@@ -111,7 +113,8 @@
       <div class="edit-visibility">
         <span>可见性：</span>
         <el-radio-group v-model="editForm.visibility">
-          <el-radio :value="1">公开</el-radio>
+          <el-radio :value="1">公共</el-radio>
+          <el-radio :value="2">仅好友可见</el-radio>
           <el-radio :value="0">仅自己可见</el-radio>
         </el-radio-group>
       </div>
