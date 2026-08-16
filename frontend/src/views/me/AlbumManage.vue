@@ -72,17 +72,19 @@
     <el-dialog v-model="dialogVisible" :title="`管理相册：${currentGroup?.name || ''}`" width="720px">
       <div class="album-manage-upload">
         <el-upload
-          :show-file-list="false"
+          v-model:file-list="uploadList"
+          multiple
           :http-request="doUploadPhoto"
           accept="image/*,video/mp4,video/webm,video/quicktime"
+          @success="onUploadDone"
         >
-          <el-button type="primary" size="small">上传照片 / 视频</el-button>
+          <el-button type="primary" size="small">📤 上传照片 / 视频（可多选）</el-button>
         </el-upload>
-        <span class="tip">图片 ≤10MB，视频 ≤200MB</span>
+        <span class="tip">图片 ≤500MB，视频 ≤5GB，可一次选择多个文件</span>
       </div>
       <div v-if="photos.length" class="album-manage-grid">
         <div v-for="p in photos" :key="p.id" class="album-manage-item">
-          <video v-if="p.mediaType === 'video'" :src="p.url" controls preload="metadata"></video>
+          <VideoThumb v-if="p.mediaType === 'video'" :src="p.url" />
           <el-image v-else :src="p.url" :preview-src-list="photos.filter(x => x.mediaType !== 'video').map(x => x.url)" fit="cover" preview-teleported lazy />
           <div class="album-manage-item-bar">
             <span class="media-badge">{{ p.mediaType === 'video' ? '🎬 视频' : '🖼 图片' }}</span>
@@ -98,6 +100,7 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import VideoThumb from '../../components/common/VideoThumb.vue'
 import {
   adminListAlbums,
   adminCreateAlbum,
@@ -120,6 +123,7 @@ const currentGroup = ref(null)
 const photos = ref([])
 const editVisible = ref(false)
 const editForm = ref({ id: null, name: '', visibility: 1 })
+const uploadList = ref([])
 
 const load = async () => {
   groups.value = await adminListAlbums()
@@ -179,29 +183,41 @@ const removeGroup = async (g) => {
   load()
 }
 
-const openManage = async (g) => {
-  currentGroup.value = g
-  dialogVisible.value = true
-  const detail = await getAlbumDetail(g.id)
-  photos.value = detail.photos
-}
-
-const doUploadPhoto = async ({ file, onSuccess, onError }) => {
+const doUploadPhoto = async ({ file, onProgress, onSuccess, onError }) => {
   try {
-    const data = await uploadFile(file)
+    // 上传并回报进度（el-upload 文件列表会显示进度条）
+    const data = await uploadFile(file, (percent) => onProgress && onProgress({ percent }))
     await adminAddAlbumPhoto(currentGroup.value.id, {
       url: data.url,
       mediaType: data.mediaType,
       description: null
     })
-    ElMessage.success('已添加到相册')
+    ElMessage.success(`「${file.name}」已添加到相册`)
     onSuccess()
-    const detail = await getAlbumDetail(currentGroup.value.id)
-    photos.value = detail.photos
+    loadPhotos()
     load()
   } catch (e) {
     onError(e)
   }
+}
+
+const loadPhotos = async () => {
+  const detail = await getAlbumDetail(currentGroup.value.id)
+  photos.value = detail.photos
+}
+
+/** 每个文件上传成功都会触发：全部完成后清空上传列表 */
+const onUploadDone = () => {
+  if (uploadList.value.length && uploadList.value.every((f) => f.status === 'success')) {
+    uploadList.value = []
+  }
+}
+
+const openManage = async (g) => {
+  currentGroup.value = g
+  dialogVisible.value = true
+  const detail = await getAlbumDetail(g.id)
+  photos.value = detail.photos
 }
 
 const removePhoto = async (p) => {

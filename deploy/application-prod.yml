@@ -19,8 +19,8 @@ spring:
     time-zone: GMT+8
   servlet:
     multipart:
-      max-file-size: 2GB
-      max-request-size: 2GB
+      max-file-size: 6GB
+      max-request-size: 6GB
 
 mybatis-plus:
   configuration:
@@ -42,8 +42,8 @@ blog:
   upload:
     # 上传目录（相对后端运行目录）
     dir: ./uploads
-    max-size: 104857600
-    video-max-size: 2147483648
+    max-size: 524288000
+    video-max-size: 5368709120
   # TODO: 替换为服务器 IP（RSS 等场景使用），如 http://1.2.3.4
   site-url: http://CHANGE_ME_SERVER_IP
   quota-default: 1073741824

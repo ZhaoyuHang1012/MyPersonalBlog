@@ -110,7 +110,8 @@
           <div v-if="albums.length" class="album-group-grid">
             <div v-for="g in albums" :key="g.id" class="album-group-card">
               <router-link :to="`/album/${g.id}`" class="album-group-link">
-                <img v-if="g.cover" :src="g.cover" :alt="g.name" loading="lazy" />
+                <VideoThumb v-if="isVideoUrl(g.cover)" :src="g.cover" class="album-group-cover-video" />
+                <img v-else-if="g.cover" :src="g.cover" :alt="g.name" loading="lazy" />
                 <div v-else class="album-no-cover">📷</div>
                 <div class="album-group-info">
                   <div class="album-group-name">{{ g.name }}</div>
@@ -149,6 +150,7 @@ import BlogShell from '../../components/blog/BlogShell.vue'
 import CommentSection from '../../components/comments/CommentSection.vue'
 import FavoriteButton from '../../components/common/FavoriteButton.vue'
 import LikeButton from '../../components/common/LikeButton.vue'
+import VideoThumb from '../../components/common/VideoThumb.vue'
 import {
   getUserInfo,
   getUserPosts,
@@ -189,6 +191,8 @@ const formatDate = (d) => (d ? dayjs(d).format('YYYY-MM-DD HH:mm') : '')
 const toggleComments = (id) => {
   expandedId.value = expandedId.value === id ? null : id
 }
+
+const isVideoUrl = (url) => /\.(mp4|webm|mov|m4v|avi)(\?.*)?$/i.test(url || '')
 
 const sendRequest = async () => {
   await sendFriendRequest({ toUserId: profile.value.id, message: '' })

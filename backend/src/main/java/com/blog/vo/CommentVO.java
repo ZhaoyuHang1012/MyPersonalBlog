@@ -30,6 +30,9 @@ public class CommentVO {
     /** 评论者用户 ID（用于识别文章作者） */
     private Long userId;
 
+    /** 评论者用户名（用于跳转个人主页，实时读取） */
+    private String username;
+
     /** 评论者头像（实时读取用户当前头像，用户更换头像后评论展示随之更新） */
     private String avatar;
 

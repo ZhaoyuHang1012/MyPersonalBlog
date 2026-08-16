@@ -42,9 +42,10 @@
           :show-file-list="false"
           :http-request="doUploadImage"
           accept="image/*"
+          multiple
           :disabled="pickedImages.length >= 9"
         >
-          <el-button size="small" :disabled="pickedImages.length >= 9">🖼 添加图片</el-button>
+          <el-button size="small" :disabled="pickedImages.length >= 9">🖼 添加图片（可多选）</el-button>
         </el-upload>
         <el-radio-group v-model="visibility" size="small">
           <el-radio-button :value="1">公共</el-radio-button>

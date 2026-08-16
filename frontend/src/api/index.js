@@ -104,10 +104,16 @@ export const adminDeleteComment = (id) => http.delete(`/admin/comments/${id}`)
 export const adminUpdateSite = (data) => http.put('/admin/site', data)
 
 // ---- 上传 / 媒体库 ----
-export const uploadFile = (file) => {
+export const uploadFile = (file, onProgress) => {
   const form = new FormData()
   form.append('file', file)
-  return http.post('/admin/upload', form)
+  return http.post('/admin/upload', form, {
+    onUploadProgress: onProgress
+      ? (e) => {
+          if (e.total) onProgress(Math.min(100, Math.round((e.loaded / e.total) * 100)))
+        }
+      : undefined
+  })
 }
 export const adminListFiles = (params) => http.get('/admin/files', { params })
 export const adminDeleteFile = (name) => http.delete('/admin/files', { params: { name } })

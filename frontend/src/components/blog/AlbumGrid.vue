@@ -3,7 +3,8 @@
     <div v-if="groups.length" class="album-group-grid">
       <div v-for="g in groups" :key="g.id" class="album-group-card">
         <router-link :to="`/album/${g.id}`" class="album-group-link">
-          <img v-if="g.cover" :src="g.cover" :alt="g.name" loading="lazy" />
+          <VideoThumb v-if="isVideoUrl(g.cover)" :src="g.cover" class="album-group-cover-video" />
+          <img v-else-if="g.cover" :src="g.cover" :alt="g.name" loading="lazy" />
           <div v-else class="album-no-cover">📷</div>
           <div class="album-group-info">
             <div class="album-group-name">{{ g.name }}</div>
@@ -29,9 +30,12 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import FavoriteButton from '../common/FavoriteButton.vue'
+import VideoThumb from '../common/VideoThumb.vue'
 import { getAlbums } from '../../api'
 
 const groups = ref([])
+
+const isVideoUrl = (url) => /\.(mp4|webm|mov|m4v|avi)(\?.*)?$/i.test(url || '')
 
 onMounted(async () => {
   groups.value = await getAlbums()

@@ -4,12 +4,25 @@
 
     <!-- 评论列表 -->
     <div v-for="c in comments" :key="c.id" class="comment-item">
-      <el-avatar class="comment-avatar" :size="38" :src="c.avatar || undefined">
+      <router-link
+        v-if="c.username"
+        :to="`/u/${c.username}`"
+        class="comment-avatar-link"
+        :title="`访问 ${c.nickname} 的主页`"
+      >
+        <el-avatar class="comment-avatar" :size="38" :src="c.avatar || undefined">
+          {{ (c.nickname || '?')[0] }}
+        </el-avatar>
+      </router-link>
+      <el-avatar v-else class="comment-avatar" :size="38" :src="c.avatar || undefined">
         {{ (c.nickname || '?')[0] }}
       </el-avatar>
       <div class="comment-body">
         <div class="comment-head">
-          <span class="comment-nickname">{{ c.nickname }}</span>
+          <router-link v-if="c.username" :to="`/u/${c.username}`" class="comment-nickname link">
+            {{ c.nickname }}
+          </router-link>
+          <span v-else class="comment-nickname">{{ c.nickname }}</span>
           <span v-if="isAuthor(c)" class="up-badge">UP</span>
           <a v-if="c.website" class="comment-site" @click="openSite(c.website)">🔗 网站</a>
           <span class="comment-time">{{ formatDate(c.createdAt) }}</span>
@@ -21,12 +34,25 @@
         <!-- 楼中楼 -->
         <div v-if="c.children && c.children.length" class="comment-children">
           <div v-for="child in c.children" :key="child.id" class="comment-item">
-            <el-avatar class="comment-avatar small" :size="30" :src="child.avatar || undefined">
+            <router-link
+              v-if="child.username"
+              :to="`/u/${child.username}`"
+              class="comment-avatar-link"
+              :title="`访问 ${child.nickname} 的主页`"
+            >
+              <el-avatar class="comment-avatar small" :size="30" :src="child.avatar || undefined">
+                {{ (child.nickname || '?')[0] }}
+              </el-avatar>
+            </router-link>
+            <el-avatar v-else class="comment-avatar small" :size="30" :src="child.avatar || undefined">
               {{ (child.nickname || '?')[0] }}
             </el-avatar>
             <div class="comment-body">
               <div class="comment-head">
-                <span class="comment-nickname">{{ child.nickname }}</span>
+                <router-link v-if="child.username" :to="`/u/${child.username}`" class="comment-nickname link">
+                  {{ child.nickname }}
+                </router-link>
+                <span v-else class="comment-nickname">{{ child.nickname }}</span>
                 <span v-if="isAuthor(child)" class="up-badge">UP</span>
                 <span class="comment-time">{{ formatDate(child.createdAt) }}</span>
               </div>

@@ -87,9 +87,9 @@ public class CommentService {
     /** 组装两层树（顶级 + 楼中楼） */
     private List<CommentVO> buildTree(List<Comment> all) {
         Map<Long, CommentVO> voMap = new LinkedHashMap<>();
-        Map<Long, String> avatars = loadAvatars(all);
+        Map<Long, User> users = loadUsers(all);
         for (Comment c : all) {
-            voMap.put(c.getId(), toVO(c, avatars.get(c.getUserId())));
+            voMap.put(c.getId(), toVO(c, users.get(c.getUserId())));
         }
         List<CommentVO> roots = new ArrayList<>();
         for (Comment c : all) {
@@ -238,10 +238,10 @@ public class CommentService {
                 murmurContents.put(m.getId(), m.getContent() == null ? "" : m.getContent());
             }
         }
-        Map<Long, String> avatars = loadAvatars(result.getRecords());
+        Map<Long, User> users = loadUsers(result.getRecords());
 
         List<CommentVO> vos = result.getRecords().stream().map(c -> {
-            CommentVO vo = toVO(c, avatars.get(c.getUserId()));
+            CommentVO vo = toVO(c, users.get(c.getUserId()));
             if (c.getMurmurId() != null) {
                 vo.setTargetType("murmur");
                 String content = murmurContents.getOrDefault(c.getMurmurId(), "（说说已删除）");
@@ -327,7 +327,7 @@ public class CommentService {
         return comment;
     }
 
-    private CommentVO toVO(Comment c, String avatar) {
+    private CommentVO toVO(Comment c, User u) {
         CommentVO vo = new CommentVO();
         vo.setId(c.getId());
         vo.setPostId(c.getPostId());
@@ -336,7 +336,8 @@ public class CommentService {
         vo.setNickname(c.getNickname());
         vo.setWebsite(c.getWebsite());
         vo.setUserId(c.getUserId());
-        vo.setAvatar(avatar);
+        vo.setAvatar(u == null ? null : u.getAvatar());
+        vo.setUsername(u == null ? null : u.getUsername());
         vo.setContent(c.getContent());
         vo.setStatus(c.getStatus());
         vo.setCreatedAt(c.getCreatedAt());
@@ -344,22 +345,20 @@ public class CommentService {
     }
 
     /**
-     * 批量加载评论者的当前头像（历史评论、用户更换头像后都能实时跟随）
+     * 批量加载评论者信息（当前头像与用户名，用户更换头像/昵称后评论展示实时跟随）
      */
-    private Map<Long, String> loadAvatars(List<Comment> comments) {
+    private Map<Long, User> loadUsers(List<Comment> comments) {
         List<Long> userIds = comments.stream()
                 .map(Comment::getUserId)
                 .filter(Objects::nonNull)
                 .distinct()
                 .collect(Collectors.toList());
-        Map<Long, String> avatars = new HashMap<>();
+        Map<Long, User> users = new HashMap<>();
         if (!userIds.isEmpty()) {
             for (User u : userMapper.selectBatchIds(userIds)) {
-                if (u.getAvatar() != null && !u.getAvatar().isEmpty()) {
-                    avatars.put(u.getId(), u.getAvatar());
-                }
+                users.put(u.getId(), u);
             }
         }
-        return avatars;
+        return users;
     }
 }

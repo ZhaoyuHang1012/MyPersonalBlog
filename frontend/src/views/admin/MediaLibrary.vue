@@ -3,8 +3,14 @@
     <h2 class="page-title">媒体库</h2>
     <el-card shadow="never">
       <div class="toolbar">
-        <el-upload :show-file-list="false" :http-request="doUpload" accept="image/*,video/mp4,video/webm,video/quicktime">
-          <el-button type="primary">上传文件</el-button>
+        <el-upload
+          v-model:file-list="uploadList"
+          multiple
+          :http-request="doUpload"
+          accept="image/*,video/mp4,video/webm,video/quicktime"
+          @success="onUploadDone"
+        >
+          <el-button type="primary">📤 上传文件（可多选）</el-button>
         </el-upload>
         <el-select
           v-if="userStore.isAdmin"
@@ -21,21 +27,15 @@
             :value="u.username"
           />
         </el-select>
-        <span class="upload-tip">图片 ≤100MB，视频 ≤2GB</span>
+        <span class="upload-tip">图片 ≤500MB，视频 ≤5GB，可一次选择多个</span>
         <div class="spacer"></div>
         <el-button @click="load">刷新</el-button>
       </div>
 
       <div v-loading="loading" class="media-grid">
         <div v-for="(f, idx) in files" :key="f.name" class="media-item">
-          <!-- 视频：直接内嵌播放器预览 -->
-          <video
-            v-if="f.mediaType === 'video'"
-            class="media-thumb media-video"
-            :src="f.url"
-            controls
-            preload="metadata"
-          ></video>
+          <!-- 视频：第一帧封面，点击播放 -->
+          <VideoThumb v-if="f.mediaType === 'video'" :src="f.url" class="media-video" />
           <!-- 图片：点击放大预览 -->
           <el-image
             v-else
@@ -84,6 +84,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import VideoThumb from '../../components/common/VideoThumb.vue'
 import { adminListFiles, adminDeleteFile, uploadFile, adminListUsers } from '../../api'
 import { useUserStore } from '../../store/user'
 
@@ -95,6 +96,7 @@ const total = ref(0)
 const page = ref(1)
 const size = ref(12)
 const loading = ref(false)
+const uploadList = ref([])
 
 const previewList = computed(() =>
   files.value.filter((f) => f.mediaType !== 'video').map((f) => f.url)
@@ -124,14 +126,22 @@ const reload = () => {
   load()
 }
 
-const doUpload = async ({ file, onSuccess, onError }) => {
+const doUpload = async ({ file, onProgress, onSuccess, onError }) => {
   try {
-    await uploadFile(file)
-    ElMessage.success('上传成功')
+    // 上传并回报进度（el-upload 文件列表会显示进度条）
+    await uploadFile(file, (percent) => onProgress && onProgress({ percent }))
+    ElMessage.success(`「${file.name}」上传成功`)
     onSuccess()
     load()
   } catch (e) {
     onError(e)
+  }
+}
+
+/** 全部上传完成后清空文件列表 */
+const onUploadDone = () => {
+  if (uploadList.value.length && uploadList.value.every((f) => f.status === 'success')) {
+    uploadList.value = []
   }
 }
 
@@ -210,7 +220,9 @@ onMounted(() => {
 .media-video {
   cursor: pointer;
   background: #000;
-  object-fit: contain;
+  border-radius: 0;
+  aspect-ratio: auto !important;
+  height: 130px;
 }
 
 .media-info {

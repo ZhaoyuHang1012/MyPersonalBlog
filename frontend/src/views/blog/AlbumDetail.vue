@@ -9,7 +9,7 @@
 
       <div v-if="photos.length" class="album-photo-grid">
         <div v-for="p in photos" :key="p.id" class="album-photo-item">
-          <video v-if="p.mediaType === 'video'" :src="p.url" controls preload="metadata" class="album-video"></video>
+          <VideoThumb v-if="p.mediaType === 'video'" :src="p.url" class="album-video" />
           <el-image
             v-else
             :src="p.url"
@@ -36,6 +36,7 @@
 import { ref, computed, watch, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import BlogShell from '../../components/blog/BlogShell.vue'
+import VideoThumb from '../../components/common/VideoThumb.vue'
 import { getAlbumDetail } from '../../api'
 
 const route = useRoute()
