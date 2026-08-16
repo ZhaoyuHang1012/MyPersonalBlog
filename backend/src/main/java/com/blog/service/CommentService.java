@@ -7,9 +7,11 @@ import com.blog.common.BizException;
 import com.blog.common.PageResult;
 import com.blog.dto.CommentRequest;
 import com.blog.entity.Comment;
+import com.blog.entity.Murmur;
 import com.blog.entity.Post;
 import com.blog.entity.User;
 import com.blog.mapper.CommentMapper;
+import com.blog.mapper.MurmurMapper;
 import com.blog.mapper.PostMapper;
 import com.blog.mapper.UserMapper;
 import com.blog.vo.CommentVO;
@@ -35,6 +37,7 @@ public class CommentService {
 
     private final CommentMapper commentMapper;
     private final PostMapper postMapper;
+    private final MurmurMapper murmurMapper;
     private final UserMapper userMapper;
     private final SiteService siteService;
 
@@ -49,7 +52,23 @@ public class CommentService {
                 .eq("status", 1)
                 .orderByAsc("id")
                 .last("LIMIT 500"));
+        return buildTree(all);
+    }
 
+    /**
+     * 说说评论列表（仅已通过，两层树，与文章评论区同款）
+     */
+    public List<CommentVO> listByMurmur(Long murmurId) {
+        List<Comment> all = commentMapper.selectList(new QueryWrapper<Comment>()
+                .eq("murmur_id", murmurId)
+                .eq("status", 1)
+                .orderByAsc("id")
+                .last("LIMIT 500"));
+        return buildTree(all);
+    }
+
+    /** 组装两层树（顶级 + 楼中楼） */
+    private List<CommentVO> buildTree(List<Comment> all) {
         Map<Long, CommentVO> voMap = new LinkedHashMap<>();
         Map<Long, String> avatars = loadAvatars(all);
         for (Comment c : all) {
@@ -121,23 +140,99 @@ public class CommentService {
         postMapper.incrCommentCount(postId);
     }
 
+    /**
+     * 提交说说评论（仅登录用户，身份自动识别，默认直接通过）
+     */
+    public void submitMurmur(Long murmurId, CommentRequest request, Long userId) {
+        Murmur murmur = murmurMapper.selectById(murmurId);
+        if (murmur == null) {
+            throw new BizException(404, "说说不存在");
+        }
+        if (siteService.info().getAllowComments() != 1) {
+            throw new BizException("评论功能已关闭");
+        }
+        if (request.getContent() == null || request.getContent().isBlank()) {
+            throw new BizException("评论内容不能为空");
+        }
+        if (request.getContent().trim().length() > 1000) {
+            throw new BizException("评论内容不能超过 1000 个字符");
+        }
+        if (userId == null) {
+            throw new BizException(401, "请先登录后再评论");
+        }
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BizException(401, "登录状态已失效，请重新登录");
+        }
+        // 「仅自己可见」说说仅作者本人可评论
+        if (murmur.getVisibility() != 1 && !userId.equals(murmur.getUserId())) {
+            throw new BizException(403, "该说说仅作者可见，无法评论");
+        }
+        if (request.getParentId() != null) {
+            Comment parent = commentMapper.selectById(request.getParentId());
+            if (parent == null || !murmurId.equals(parent.getMurmurId())) {
+                throw new BizException("回复的评论不存在");
+            }
+        }
+
+        Comment comment = new Comment();
+        comment.setMurmurId(murmurId);
+        comment.setParentId(request.getParentId());
+        comment.setContent(request.getContent().trim());
+        comment.setNickname(user.getNickname());
+        comment.setEmail("");
+        comment.setUserId(userId);
+        comment.setWebsite(null);
+        // 默认直接通过
+        comment.setStatus(1);
+        comment.setCreatedAt(LocalDateTime.now());
+        commentMapper.insert(comment);
+        murmurMapper.incrCommentCount(murmurId);
+    }
+
     // ==================== 后台 ====================
 
-    public PageResult<CommentVO> listAdmin(int page, int size, Integer status) {
+    /**
+     * 管理端评论列表：统一管理文章评论与说说评论（targetType 可选：post / murmur）
+     */
+    public PageResult<CommentVO> listAdmin(int page, int size, Integer status, String targetType) {
         QueryWrapper<Comment> qw = new QueryWrapper<>();
-        qw.eq(status != null, "status", status).orderByDesc("id");
+        qw.eq(status != null, "status", status);
+        if ("murmur".equals(targetType)) {
+            qw.isNotNull("murmur_id");
+        } else if ("post".equals(targetType)) {
+            qw.isNotNull("post_id");
+        }
+        qw.orderByDesc("id");
         Page<Comment> result = commentMapper.selectPage(new Page<>(page, size), qw);
 
         List<Long> postIds = result.getRecords().stream()
-                .map(Comment::getPostId).distinct().collect(Collectors.toList());
-        Map<Long, String> titles = postIds.isEmpty() ? Map.of()
-                : postMapper.selectBatchIds(postIds).stream()
-                .collect(Collectors.toMap(Post::getId, Post::getTitle));
+                .map(Comment::getPostId).filter(Objects::nonNull).distinct().collect(Collectors.toList());
+        Map<Long, String> titles = new HashMap<>();
+        if (!postIds.isEmpty()) {
+            titles.putAll(postMapper.selectBatchIds(postIds).stream()
+                    .collect(Collectors.toMap(Post::getId, Post::getTitle)));
+        }
+        List<Long> murmurIds = result.getRecords().stream()
+                .map(Comment::getMurmurId).filter(Objects::nonNull).distinct().collect(Collectors.toList());
+        Map<Long, String> murmurContents = new HashMap<>();
+        if (!murmurIds.isEmpty()) {
+            for (Murmur m : murmurMapper.selectBatchIds(murmurIds)) {
+                murmurContents.put(m.getId(), m.getContent() == null ? "" : m.getContent());
+            }
+        }
         Map<Long, String> avatars = loadAvatars(result.getRecords());
 
         List<CommentVO> vos = result.getRecords().stream().map(c -> {
             CommentVO vo = toVO(c, avatars.get(c.getUserId()));
-            vo.setPostTitle(titles.getOrDefault(c.getPostId(), "（文章已删除）"));
+            if (c.getMurmurId() != null) {
+                vo.setTargetType("murmur");
+                String content = murmurContents.getOrDefault(c.getMurmurId(), "（说说已删除）");
+                vo.setPostTitle(content.length() > 60 ? content.substring(0, 60) + "…" : content);
+            } else {
+                vo.setTargetType("post");
+                vo.setPostTitle(titles.getOrDefault(c.getPostId(), "（文章已删除）"));
+            }
             return vo;
         }).collect(Collectors.toList());
         return new PageResult<>(vos, result.getTotal(), result.getCurrent(), result.getSize());
@@ -151,7 +246,7 @@ public class CommentService {
         }
         comment.setStatus(1);
         commentMapper.updateById(comment);
-        postMapper.incrCommentCount(comment.getPostId());
+        incrTargetCount(comment);
     }
 
     /** 退回：已通过 -> 待审核（前台隐藏） */
@@ -163,7 +258,7 @@ public class CommentService {
         }
         comment.setStatus(0);
         commentMapper.updateById(comment);
-        postMapper.decrCommentCount(comment.getPostId());
+        decrTargetCount(comment);
     }
 
     @Transactional
@@ -173,7 +268,7 @@ public class CommentService {
         comment.setStatus(2);
         commentMapper.updateById(comment);
         if (oldStatus != null && oldStatus == 1) {
-            postMapper.decrCommentCount(comment.getPostId());
+            decrTargetCount(comment);
         }
     }
 
@@ -185,7 +280,25 @@ public class CommentService {
                 .eq("parent_id", id).set("parent_id", null));
         commentMapper.deleteById(id);
         if (comment.getStatus() != null && comment.getStatus() == 1) {
-            postMapper.decrCommentCount(comment.getPostId());
+            decrTargetCount(comment);
+        }
+    }
+
+    /** 按评论归属（文章/说说）累加计数 */
+    private void incrTargetCount(Comment c) {
+        if (c.getMurmurId() != null) {
+            murmurMapper.incrCommentCount(c.getMurmurId());
+        } else if (c.getPostId() != null) {
+            postMapper.incrCommentCount(c.getPostId());
+        }
+    }
+
+    /** 按评论归属（文章/说说）扣减计数 */
+    private void decrTargetCount(Comment c) {
+        if (c.getMurmurId() != null) {
+            murmurMapper.decrCommentCount(c.getMurmurId());
+        } else if (c.getPostId() != null) {
+            postMapper.decrCommentCount(c.getPostId());
         }
     }
 
@@ -201,6 +314,7 @@ public class CommentService {
         CommentVO vo = new CommentVO();
         vo.setId(c.getId());
         vo.setPostId(c.getPostId());
+        vo.setMurmurId(c.getMurmurId());
         vo.setParentId(c.getParentId());
         vo.setNickname(c.getNickname());
         vo.setWebsite(c.getWebsite());

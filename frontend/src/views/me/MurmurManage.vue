@@ -82,6 +82,14 @@
           class="murmur-item-img"
         />
       </div>
+      <div class="murmur-foot">
+        <span class="murmur-comment-toggle" @click="toggleComments(m.id)">
+          💬 评论（{{ m.commentCount || 0 }}）{{ expandedId === m.id ? '▲' : '▼' }}
+        </span>
+      </div>
+      <div v-if="expandedId === m.id" class="murmur-comment-box">
+        <CommentSection :murmur-id="m.id" :author-id="m.userId" />
+      </div>
     </div>
     <el-empty v-if="!murmurs.length" description="还没有发过说说" />
 
@@ -119,12 +127,18 @@
 import { ref, onMounted } from 'vue'
 import dayjs from 'dayjs'
 import { ElMessage, ElMessageBox } from 'element-plus'
+import CommentSection from '../../components/comments/CommentSection.vue'
 import { adminListMurmurs, adminCreateMurmur, adminUpdateMurmur, adminDeleteMurmur, uploadFile, adminListUsers } from '../../api'
 import { useUserStore } from '../../store/user'
 
 const userStore = useUserStore()
 const users = ref([])
 const authorId = ref(null)
+const expandedId = ref(null)
+
+const toggleComments = (id) => {
+  expandedId.value = expandedId.value === id ? null : id
+}
 
 const content = ref('')
 const pickedImages = ref([])

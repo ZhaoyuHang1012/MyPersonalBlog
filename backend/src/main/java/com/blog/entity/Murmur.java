@@ -29,5 +29,7 @@ public class Murmur {
 
     private Long likeCount;
 
+    private Long commentCount;
+
     private LocalDateTime createdAt;
 }

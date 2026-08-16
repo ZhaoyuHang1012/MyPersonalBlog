@@ -5,8 +5,10 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.blog.common.BizException;
 import com.blog.common.PageResult;
 import com.blog.dto.MurmurRequest;
+import com.blog.entity.Comment;
 import com.blog.entity.Murmur;
 import com.blog.entity.User;
+import com.blog.mapper.CommentMapper;
 import com.blog.mapper.MurmurMapper;
 import com.blog.mapper.UserMapper;
 import com.blog.vo.MurmurVO;
@@ -35,6 +37,7 @@ public class MurmurService {
 
     private final MurmurMapper murmurMapper;
     private final UserMapper userMapper;
+    private final CommentMapper commentMapper;
     private final ObjectMapper objectMapper;
 
     /** 大厅：登录用户展示自己+好友的公开说说；未登录展示全部公开说说 */
@@ -124,6 +127,8 @@ public class MurmurService {
             throw new BizException(403, "无权删除他人说说");
         }
         murmurMapper.deleteById(id);
+        // 级联删除说说下的评论
+        commentMapper.delete(new QueryWrapper<Comment>().eq("murmur_id", id));
     }
 
     private List<String> normalizeImages(List<String> images) {
@@ -176,6 +181,7 @@ public class MurmurService {
             vo.setVisibility(m.getVisibility());
             vo.setImages(readImages(m.getImages()));
             vo.setLikeCount(m.getLikeCount() == null ? 0L : m.getLikeCount());
+            vo.setCommentCount(m.getCommentCount() == null ? 0L : m.getCommentCount());
             vo.setCreatedAt(m.getCreatedAt());
             User u = users.get(m.getUserId());
             if (u != null) {

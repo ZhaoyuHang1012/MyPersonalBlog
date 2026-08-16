@@ -30,6 +30,14 @@
           class="murmur-img"
         />
       </div>
+      <div class="murmur-foot">
+        <span class="murmur-comment-toggle" @click="toggleComments(m.id)">
+          💬 评论（{{ m.commentCount || 0 }}）{{ expandedId === m.id ? '▲' : '▼' }}
+        </span>
+      </div>
+      <div v-if="expandedId === m.id" class="murmur-comment-box">
+        <CommentSection :murmur-id="m.id" :author-id="m.userId" />
+      </div>
     </div>
 
     <div v-if="!murmurs.length" class="empty">还没有公开说说</div>
@@ -52,14 +60,20 @@ import { ref, onMounted } from 'vue'
 import dayjs from 'dayjs'
 import FavoriteButton from '../common/FavoriteButton.vue'
 import LikeButton from '../common/LikeButton.vue'
+import CommentSection from '../comments/CommentSection.vue'
 import { getMurmurs } from '../../api'
 
 const murmurs = ref([])
 const total = ref(0)
 const page = ref(1)
 const size = ref(10)
+const expandedId = ref(null)
 
 const formatDate = (d) => (d ? dayjs(d).format('YYYY-MM-DD HH:mm') : '')
+
+const toggleComments = (id) => {
+  expandedId.value = expandedId.value === id ? null : id
+}
 
 const load = async () => {
   const data = await getMurmurs({ page: page.value, size: size.value })

@@ -26,8 +26,9 @@ public class AdminCommentController {
     @GetMapping
     public Result<PageResult<CommentVO>> list(@RequestParam(defaultValue = "1") int page,
                                               @RequestParam(defaultValue = "10") int size,
-                                              @RequestParam(required = false) Integer status) {
-        return Result.ok(commentService.listAdmin(page, size, status));
+                                              @RequestParam(required = false) Integer status,
+                                              @RequestParam(required = false) String targetType) {
+        return Result.ok(commentService.listAdmin(page, size, status, targetType));
     }
 
     @PutMapping("/{id}/approve")

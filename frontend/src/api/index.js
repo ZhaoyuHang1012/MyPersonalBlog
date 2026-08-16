@@ -90,6 +90,8 @@ export const adminListLogs = (params) => http.get('/admin/logs', { params })
 // ---- 评论 ----
 export const getPostComments = (postId) => http.get(`/posts/${postId}/comments`)
 export const submitComment = (postId, data) => http.post(`/posts/${postId}/comments`, data)
+export const getMurmurComments = (murmurId) => http.get(`/murmurs/${murmurId}/comments`)
+export const submitMurmurComment = (murmurId, data) => http.post(`/murmurs/${murmurId}/comments`, data)
 export const adminListComments = (params) => http.get('/admin/comments', { params })
 export const adminApproveComment = (id) => http.put(`/admin/comments/${id}/approve`)
 export const adminUnapproveComment = (id) => http.put(`/admin/comments/${id}/unapprove`)

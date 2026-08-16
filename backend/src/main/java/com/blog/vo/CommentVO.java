@@ -15,6 +15,12 @@ public class CommentVO {
 
     private Long postId;
 
+    /** 说说 ID（说说评论时返回） */
+    private Long murmurId;
+
+    /** 评论目标类型：post 文章 / murmur 说说（管理端区分用） */
+    private String targetType;
+
     private Long parentId;
 
     private String nickname;

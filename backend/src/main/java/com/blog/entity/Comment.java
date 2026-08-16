@@ -17,7 +17,11 @@ public class Comment {
     @TableId(type = IdType.AUTO)
     private Long id;
 
+    /** 文章 ID（说说评论时为 NULL，与 murmurId 二选一） */
     private Long postId;
+
+    /** 说说 ID（文章评论时为 NULL，与 postId 二选一） */
+    private Long murmurId;
 
     /** 父评论 ID（楼中楼回复） */
     private Long parentId;

@@ -83,13 +83,17 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import dayjs from 'dayjs'
 import EmojiPanel from './EmojiPanel.vue'
-import { getPostComments, submitComment, getSite } from '../../api'
+import { getPostComments, submitComment, getMurmurComments, submitMurmurComment, getSite } from '../../api'
 import { useUserStore } from '../../store/user'
 
 const props = defineProps({
-  postId: { type: [String, Number], required: true },
+  postId: { type: [String, Number], default: null },
+  /** 说说评论：传入 murmurId 时进入说说评论模式（与 postId 二选一） */
+  murmurId: { type: [String, Number], default: null },
   authorId: { type: [String, Number], default: null }
 })
+
+const isMurmur = computed(() => props.murmurId != null)
 
 const route = useRoute()
 const router = useRouter()
@@ -118,7 +122,10 @@ const goLogin = () => {
 const formatDate = (d) => (d ? dayjs(d).format('YYYY-MM-DD HH:mm') : '')
 
 const load = async () => {
-  comments.value = await getPostComments(props.postId)
+  const list = isMurmur.value
+    ? await getMurmurComments(props.murmurId)
+    : await getPostComments(props.postId)
+  comments.value = list
   total.value = comments.value.reduce((n, c) => n + 1 + (c.children?.length || 0), 0)
 }
 
@@ -143,10 +150,15 @@ const submit = async () => {
   }
   submitting.value = true
   try {
-    await submitComment(props.postId, {
+    const payload = {
       content: form.value.content.trim(),
       parentId: replyTarget.value?.id || null
-    })
+    }
+    if (isMurmur.value) {
+      await submitMurmurComment(props.murmurId, payload)
+    } else {
+      await submitComment(props.postId, payload)
+    }
     ElMessage.success('评论成功')
     form.value.content = ''
     replyTarget.value = null
@@ -167,5 +179,5 @@ onMounted(async () => {
     /* ignore */
   }
 })
-watch(() => props.postId, load)
+watch(() => [props.postId, props.murmurId], load)
 </script>

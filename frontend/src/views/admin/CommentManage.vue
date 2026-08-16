@@ -3,10 +3,15 @@
     <h2 class="page-title">评论管理</h2>
     <div class="toolbar">
       <el-radio-group v-model="status" @change="reload">
-        <el-radio-button :value="null">全部</el-radio-button>
+        <el-radio-button :value="null">全部状态</el-radio-button>
         <el-radio-button :value="0">待审核</el-radio-button>
         <el-radio-button :value="1">已通过</el-radio-button>
         <el-radio-button :value="2">垃圾</el-radio-button>
+      </el-radio-group>
+      <el-radio-group v-model="targetType" @change="reload" style="margin-left: 12px">
+        <el-radio-button :value="null">文章+说说</el-radio-button>
+        <el-radio-button value="post">📄 文章</el-radio-button>
+        <el-radio-button value="murmur">💭 说说</el-radio-button>
       </el-radio-group>
       <div class="spacer"></div>
       <el-button @click="load">刷新</el-button>
@@ -14,9 +19,17 @@
 
     <el-table :data="comments" v-loading="loading" stripe>
       <el-table-column prop="id" label="ID" width="70" />
-      <el-table-column label="所属文章" min-width="160">
+      <el-table-column label="所属内容" min-width="200">
         <template #default="{ row }">
-          <span class="post-title-link" @click="openPost(row)">{{ row.postTitle }}</span>
+          <el-tag :type="row.targetType === 'murmur' ? 'warning' : 'primary'" size="small" class="mr4">
+            {{ row.targetType === 'murmur' ? '说说' : '文章' }}
+          </el-tag>
+          <span
+            v-if="row.targetType === 'post'"
+            class="post-title-link"
+            @click="openPost(row)"
+          >{{ row.postTitle }}</span>
+          <span v-else class="murmur-target-text">{{ row.postTitle }}</span>
         </template>
       </el-table-column>
       <el-table-column label="评论者" width="150">
@@ -79,6 +92,7 @@ const total = ref(0)
 const page = ref(1)
 const size = ref(10)
 const status = ref(null)
+const targetType = ref(null)
 const loading = ref(false)
 
 const formatDate = (d) => (d ? dayjs(d).format('YYYY-MM-DD HH:mm') : '')
@@ -87,6 +101,11 @@ const statusText = (s) => ({ 0: '待审核', 1: '已通过', 2: '垃圾' }[s] ||
 const statusTagType = (s) => ({ 0: 'warning', 1: 'success', 2: 'danger' }[s] || 'info')
 
 const openPost = (row) => {
+  if (row.targetType === 'murmur') {
+    // 说说没有独立详情页，跳大厅说说 Tab
+    window.open('/', '_blank')
+    return
+  }
   window.open(`/post/${row.postId}`, '_blank')
 }
 
@@ -96,7 +115,8 @@ const load = async () => {
     const data = await adminListComments({
       page: page.value,
       size: size.value,
-      status: status.value ?? undefined
+      status: status.value ?? undefined,
+      targetType: targetType.value ?? undefined
     })
     comments.value = data.records
     total.value = data.total
@@ -155,5 +175,10 @@ onMounted(load)
 
 .comment-content-text {
   white-space: pre-wrap;
+}
+
+.murmur-target-text {
+  color: #606266;
+  font-size: 13px;
 }
 </style>

@@ -12,4 +12,10 @@ public interface MurmurMapper extends BaseMapper<Murmur> {
 
     @Update("UPDATE murmurs SET like_count = GREATEST(like_count - 1, 0) WHERE id = #{id}")
     int decrLikeCount(@Param("id") Long id);
+
+    @Update("UPDATE murmurs SET comment_count = comment_count + 1 WHERE id = #{id}")
+    int incrCommentCount(@Param("id") Long id);
+
+    @Update("UPDATE murmurs SET comment_count = GREATEST(comment_count - 1, 0) WHERE id = #{id}")
+    int decrCommentCount(@Param("id") Long id);
 }

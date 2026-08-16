@@ -23,6 +23,8 @@ public class MurmurVO {
 
     private Long likeCount;
 
+    private Long commentCount;
+
     private LocalDateTime createdAt;
 
     private AuthorVO author;

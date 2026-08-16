@@ -190,6 +190,67 @@ a {
   vertical-align: 3px;
 }
 
+/* ============ 「我的文章」页（大厅式卡片管理） ============ */
+.draft-badge {
+  display: inline-block;
+  background: #eef2f7;
+  color: #6b7280;
+  font-size: 12px;
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-right: 8px;
+  vertical-align: 3px;
+}
+
+.private-badge {
+  font-size: 12px;
+  color: #909399;
+}
+
+.post-title-plain {
+  color: var(--text);
+  font-weight: 600;
+}
+
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-top: 10px;
+  border-top: 1px dashed var(--border);
+  padding-top: 10px;
+}
+
+.posts-page-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.posts-page-head .simple-title {
+  margin-bottom: 6px;
+}
+
+.posts-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.posts-status {
+  margin-left: 4px;
+}
+
+.posts-total {
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
 .summary {
   color: var(--text-secondary);
   font-size: 14px;
@@ -930,6 +991,39 @@ a {
 
 .murmur-images.count-1 .murmur-img {
   height: 220px;
+}
+
+/* 说说评论区入口 */
+.murmur-foot {
+  margin-top: 10px;
+  padding-top: 8px;
+  border-top: 1px dashed var(--border);
+}
+
+.murmur-comment-toggle {
+  display: inline-block;
+  font-size: 13px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  user-select: none;
+  padding: 2px 6px;
+  border-radius: 6px;
+}
+
+.murmur-comment-toggle:hover {
+  color: var(--accent);
+  background: var(--accent-light);
+}
+
+.murmur-comment-box {
+  margin-top: 8px;
+  padding: 14px 14px 4px;
+  background: var(--bg, #f8f9fb);
+  border-radius: 8px;
+}
+
+html[data-theme='dark'] .murmur-comment-box {
+  background: rgba(255, 255, 255, 0.04);
 }
 
 /* ============ 相册组网格 ============ */
