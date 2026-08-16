@@ -19,9 +19,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -49,8 +51,9 @@ public class CommentService {
                 .last("LIMIT 500"));
 
         Map<Long, CommentVO> voMap = new LinkedHashMap<>();
+        Map<Long, String> avatars = loadAvatars(all);
         for (Comment c : all) {
-            voMap.put(c.getId(), toVO(c));
+            voMap.put(c.getId(), toVO(c, avatars.get(c.getUserId())));
         }
         List<CommentVO> roots = new ArrayList<>();
         for (Comment c : all) {
@@ -130,9 +133,10 @@ public class CommentService {
         Map<Long, String> titles = postIds.isEmpty() ? Map.of()
                 : postMapper.selectBatchIds(postIds).stream()
                 .collect(Collectors.toMap(Post::getId, Post::getTitle));
+        Map<Long, String> avatars = loadAvatars(result.getRecords());
 
         List<CommentVO> vos = result.getRecords().stream().map(c -> {
-            CommentVO vo = toVO(c);
+            CommentVO vo = toVO(c, avatars.get(c.getUserId()));
             vo.setPostTitle(titles.getOrDefault(c.getPostId(), "（文章已删除）"));
             return vo;
         }).collect(Collectors.toList());
@@ -193,7 +197,7 @@ public class CommentService {
         return comment;
     }
 
-    private CommentVO toVO(Comment c) {
+    private CommentVO toVO(Comment c, String avatar) {
         CommentVO vo = new CommentVO();
         vo.setId(c.getId());
         vo.setPostId(c.getPostId());
@@ -201,9 +205,30 @@ public class CommentService {
         vo.setNickname(c.getNickname());
         vo.setWebsite(c.getWebsite());
         vo.setUserId(c.getUserId());
+        vo.setAvatar(avatar);
         vo.setContent(c.getContent());
         vo.setStatus(c.getStatus());
         vo.setCreatedAt(c.getCreatedAt());
         return vo;
+    }
+
+    /**
+     * 批量加载评论者的当前头像（历史评论、用户更换头像后都能实时跟随）
+     */
+    private Map<Long, String> loadAvatars(List<Comment> comments) {
+        List<Long> userIds = comments.stream()
+                .map(Comment::getUserId)
+                .filter(Objects::nonNull)
+                .distinct()
+                .collect(Collectors.toList());
+        Map<Long, String> avatars = new HashMap<>();
+        if (!userIds.isEmpty()) {
+            for (User u : userMapper.selectBatchIds(userIds)) {
+                if (u.getAvatar() != null && !u.getAvatar().isEmpty()) {
+                    avatars.put(u.getId(), u.getAvatar());
+                }
+            }
+        }
+        return avatars;
     }
 }

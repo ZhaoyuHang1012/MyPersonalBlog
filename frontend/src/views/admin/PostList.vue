@@ -81,9 +81,12 @@ import { ElMessage, ElMessageBox } from 'element-plus'
 import { adminListPosts, adminDeletePost } from '../../api'
 
 const route = useRoute()
-// 兼容前台个人中心（/me）与管理后台（/admin）两种场景
-const isMe = computed(() => route.path.startsWith('/me'))
-const listBase = computed(() => (isMe.value ? '/me/posts' : '/admin/posts'))
+// 兼容前台导航「文章」页（/posts）、个人中心（/me）与管理后台（/admin）三种场景
+const listBase = computed(() => {
+  if (route.path.startsWith('/me')) return '/me/posts'
+  if (route.path.startsWith('/posts')) return '/posts'
+  return '/admin/posts'
+})
 const newPath = computed(() => `${listBase.value}/new`)
 const editPath = (id) => `${listBase.value}/${id}/edit`
 

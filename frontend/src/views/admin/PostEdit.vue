@@ -91,8 +91,12 @@ import {
 const route = useRoute()
 const router = useRouter()
 const isEdit = computed(() => !!route.params.id)
-// 兼容前台个人中心（/me）与管理后台（/admin）两种场景
-const listPath = computed(() => (route.path.startsWith('/me') ? '/me/posts' : '/admin/posts'))
+// 兼容前台导航「文章」页（/posts）、个人中心（/me）与管理后台（/admin）三种场景
+const listPath = computed(() => {
+  if (route.path.startsWith('/me')) return '/me/posts'
+  if (route.path.startsWith('/posts')) return '/posts'
+  return '/admin/posts'
+})
 
 const form = ref({
   title: '',

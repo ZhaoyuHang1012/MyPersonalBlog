@@ -10,6 +10,10 @@ const routes = [
   { path: '/murmur', component: () => import('../views/blog/Murmur.vue') },
   { path: '/album', component: () => import('../views/blog/Album.vue') },
   { path: '/album/:id', component: () => import('../views/blog/AlbumDetail.vue') },
+  // 导航「文章」：自己的文章管理（类似说说/相册页面）
+  { path: '/posts', component: () => import('../views/blog/PostsPage.vue') },
+  { path: '/posts/new', component: () => import('../views/blog/PostsEditPage.vue'), meta: { requiresAuth: true } },
+  { path: '/posts/:id/edit', component: () => import('../views/blog/PostsEditPage.vue'), meta: { requiresAuth: true } },
   { path: '/u/:username', component: () => import('../views/blog/UserBlog.vue') },
   { path: '/register', component: () => import('../views/auth/Register.vue') },
   // 个人中心（前台风格，登录用户管理自己的博客）

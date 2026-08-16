@@ -24,6 +24,9 @@ public class CommentVO {
     /** 评论者用户 ID（用于识别文章作者） */
     private Long userId;
 
+    /** 评论者头像（实时读取用户当前头像，用户更换头像后评论展示随之更新） */
+    private String avatar;
+
     private String content;
 
     /** 0 待审核 1 已通过 2 垃圾 */

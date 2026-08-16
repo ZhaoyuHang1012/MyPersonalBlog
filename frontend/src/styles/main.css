@@ -1580,20 +1580,15 @@ html[data-theme='dark'] .markdown-body blockquote {
 
 .comment-avatar {
   flex-shrink: 0;
-  width: 38px;
-  height: 38px;
-  border-radius: 50%;
   background: var(--accent-light);
   color: var(--accent);
-  display: flex;
-  align-items: center;
-  justify-content: center;
   font-weight: 600;
+  --el-avatar-bg-color: var(--accent-light);
+  --el-avatar-text-color: var(--accent);
+  --el-avatar-icon-color: var(--accent);
 }
 
 .comment-avatar.small {
-  width: 30px;
-  height: 30px;
   font-size: 13px;
 }
 

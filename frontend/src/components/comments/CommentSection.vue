@@ -4,7 +4,9 @@
 
     <!-- 评论列表 -->
     <div v-for="c in comments" :key="c.id" class="comment-item">
-      <div class="comment-avatar">{{ c.nickname[0] }}</div>
+      <el-avatar class="comment-avatar" :size="38" :src="c.avatar || undefined">
+        {{ (c.nickname || '?')[0] }}
+      </el-avatar>
       <div class="comment-body">
         <div class="comment-head">
           <span class="comment-nickname">{{ c.nickname }}</span>
@@ -19,7 +21,9 @@
         <!-- 楼中楼 -->
         <div v-if="c.children && c.children.length" class="comment-children">
           <div v-for="child in c.children" :key="child.id" class="comment-item">
-            <div class="comment-avatar small">{{ child.nickname[0] }}</div>
+            <el-avatar class="comment-avatar small" :size="30" :src="child.avatar || undefined">
+              {{ (child.nickname || '?')[0] }}
+            </el-avatar>
             <div class="comment-body">
               <div class="comment-head">
                 <span class="comment-nickname">{{ child.nickname }}</span>
